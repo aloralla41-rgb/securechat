@@ -32,8 +32,16 @@ class Store {
   findUserById(id) { return this.data.users.find(x => x.id === id); }
   searchUsers(q, excludeId) {
     return this.data.users
-      .filter(u => u.username.toLowerCase().includes(q.toLowerCase()) && u.id !== excludeId)
-      .map(u => ({ id: u.id, username: u.username, public_key: u.public_key }))
+      .filter(u => {
+        if (u.id === excludeId) return false;
+        const name = (u.display_name || '').toLowerCase();
+        const uname = u.username.toLowerCase();
+        const query = q.toLowerCase();
+        return uname.includes(query) || name.includes(query);
+      })
+      .map(u => ({ id: u.id, username: u.username, public_key: u.public_key,
+                   display_name: u.display_name||'', bio: u.bio||'',
+                   avatar_color: u.avatar_color||'', avatar_emoji: u.avatar_emoji||'' }))
       .slice(0, 20);
   }
   addUser(user) { this.data.users.push(user); this.save(); }
@@ -53,7 +61,12 @@ class Store {
     const result = [];
     for (const [otherId, lastMsg] of seen.entries()) {
       const u = this.findUserById(otherId);
-      if (u) result.push({ other_id: otherId, other_username: u.username, other_public_key: u.public_key, last_time: lastMsg.created_at });
+      if (u) result.push({
+        other_id: otherId, other_username: u.username,
+        other_display_name: u.display_name||'', other_bio: u.bio||'',
+        other_avatar_color: u.avatar_color||'', other_avatar_emoji: u.avatar_emoji||'',
+        other_public_key: u.public_key, last_time: lastMsg.created_at
+      });
     }
     return result.sort((a,b) => b.last_time - a.last_time);
   }
@@ -99,9 +112,10 @@ app.post('/api/register', async (req, res) => {
   if (db.findUserByUsername(username)) return res.status(409).json({ error: 'Username already taken' });
   const hash = await bcrypt.hash(password, 12);
   const id = uuidv4();
-  db.addUser({ id, username, password_hash: hash, public_key: publicKey, created_at: Date.now() });
+  db.addUser({ id, username, password_hash: hash, public_key: publicKey, created_at: Date.now(),
+               display_name: '', bio: '', avatar_color: '', avatar_emoji: '' });
   const token = jwt.sign({ id, username }, JWT_SECRET, { expiresIn: '30d' });
-  res.json({ token, id, username, publicKey });
+  res.json({ token, id, username, publicKey, display_name: '', bio: '', avatar_color: '', avatar_emoji: '' });
 });
 
 app.post('/api/login', async (req, res) => {
@@ -110,7 +124,32 @@ app.post('/api/login', async (req, res) => {
   if (!user || !(await bcrypt.compare(password, user.password_hash)))
     return res.status(401).json({ error: 'Invalid username or password' });
   const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '30d' });
-  res.json({ token, id: user.id, username: user.username, publicKey: user.public_key });
+  res.json({ token, id: user.id, username: user.username, publicKey: user.public_key,
+             display_name: user.display_name||'', bio: user.bio||'',
+             avatar_color: user.avatar_color||'', avatar_emoji: user.avatar_emoji||'' });
+});
+
+app.get('/api/me', auth, (req, res) => {
+  const u = db.findUserById(req.user.id);
+  if (!u) return res.status(404).json({ error: 'Not found' });
+  res.json({ id: u.id, username: u.username, display_name: u.display_name||'',
+             bio: u.bio||'', avatar_color: u.avatar_color||'', avatar_emoji: u.avatar_emoji||'' });
+});
+
+app.patch('/api/profile', auth, (req, res) => {
+  const u = db.findUserById(req.user.id);
+  if (!u) return res.status(404).json({ error: 'Not found' });
+  const { display_name, bio, avatar_color, avatar_emoji } = req.body;
+  if (display_name !== undefined) u.display_name = String(display_name).slice(0, 50);
+  if (bio !== undefined) u.bio = String(bio).slice(0, 150);
+  if (avatar_color !== undefined) u.avatar_color = String(avatar_color).slice(0, 20);
+  if (avatar_emoji !== undefined) u.avatar_emoji = String(avatar_emoji).slice(0, 8);
+  db.save();
+  // Notify others about profile update
+  io.emit('profile_updated', { id: u.id, display_name: u.display_name, bio: u.bio,
+                                avatar_color: u.avatar_color, avatar_emoji: u.avatar_emoji });
+  res.json({ ok: true, display_name: u.display_name, bio: u.bio,
+             avatar_color: u.avatar_color, avatar_emoji: u.avatar_emoji });
 });
 
 app.get('/api/users/search', auth, (req, res) => {
@@ -120,7 +159,9 @@ app.get('/api/users/search', auth, (req, res) => {
 app.get('/api/users/:id', auth, (req, res) => {
   const u = db.findUserById(req.params.id);
   if (!u) return res.status(404).json({ error: 'Not found' });
-  res.json({ id: u.id, username: u.username, public_key: u.public_key });
+  res.json({ id: u.id, username: u.username, public_key: u.public_key,
+             display_name: u.display_name||'', bio: u.bio||'',
+             avatar_color: u.avatar_color||'', avatar_emoji: u.avatar_emoji||'' });
 });
 app.get('/api/conversations', auth, (req, res) => res.json(db.getConversations(req.user.id)));
 app.get('/api/messages/:userId', auth, (req, res) => {
@@ -130,20 +171,17 @@ app.get('/api/messages/:userId', auth, (req, res) => {
   res.json(msgs);
 });
 
-// Save a message forever
 app.post('/api/messages/:id/save', auth, (req, res) => {
   const msg = db.data.messages.find(m => m.id === req.params.id);
   if (!msg) return res.status(404).json({ error: 'Not found' });
   if (msg.sender_id !== req.user.id && msg.recipient_id !== req.user.id)
     return res.status(403).json({ error: 'Forbidden' });
-  msg.saved = true;
-  db.save();
+  msg.saved = true; db.save();
   const otherId = msg.sender_id === req.user.id ? msg.recipient_id : msg.sender_id;
   io.to(otherId).emit('message_saved', { id: msg.id });
   res.json({ ok: true });
 });
 
-// Delete a message (either participant can delete for everyone)
 app.delete('/api/messages/:id', auth, (req, res) => {
   const msg = db.data.messages.find(m => m.id === req.params.id);
   if (!msg) return res.status(404).json({ error: 'Not found' });
@@ -161,19 +199,14 @@ app.delete('/api/messages/:id', auth, (req, res) => {
   res.json({ ok: true });
 });
 
-// Edit a message (only sender can edit)
 app.post('/api/messages/:id/edit', auth, (req, res) => {
   const msg = db.data.messages.find(m => m.id === req.params.id);
   if (!msg) return res.status(404).json({ error: 'Not found' });
   if (msg.sender_id !== req.user.id) return res.status(403).json({ error: 'Only the sender can edit' });
   const { ciphertext, iv, recipientKey, senderKey } = req.body;
   if (!ciphertext || !iv || !recipientKey || !senderKey) return res.status(400).json({ error: 'Missing fields' });
-  msg.ciphertext = ciphertext;
-  msg.iv = iv;
-  msg.recipient_key = recipientKey;
-  msg.sender_key = senderKey;
-  msg.edited_at = Math.floor(Date.now() / 1000);
-  db.save();
+  msg.ciphertext = ciphertext; msg.iv = iv; msg.recipient_key = recipientKey; msg.sender_key = senderKey;
+  msg.edited_at = Math.floor(Date.now() / 1000); db.save();
   const payload = { id: msg.id, ciphertext, iv, recipientKey, senderKey, edited_at: msg.edited_at };
   io.to(msg.recipient_id).emit('message_edited', payload);
   io.to(msg.sender_id).emit('message_edited', payload);
