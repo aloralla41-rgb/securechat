@@ -12,7 +12,6 @@ app.set('trust proxy', 1);
 const httpServer = http.createServer(app);
 const io = new Server(httpServer, { transports: ['websocket', 'polling'] });
 
-// Persist JWT secret across restarts
 const secretFile = path.join(__dirname, '.jwt_secret');
 let JWT_SECRET;
 if (fs.existsSync(secretFile)) {
@@ -22,7 +21,6 @@ if (fs.existsSync(secretFile)) {
   fs.writeFileSync(secretFile, JWT_SECRET);
 }
 
-// Simple JSON store - no native modules needed
 class Store {
   constructor(file) {
     this.file = file;
@@ -30,10 +28,8 @@ class Store {
     catch { this.data = { users: [], messages: [] }; }
   }
   save() { fs.writeFileSync(this.file, JSON.stringify(this.data)); }
-  findUserByUsername(username) {
-    return this.data.users.find(u => u.username.toLowerCase() === username.toLowerCase());
-  }
-  findUserById(id) { return this.data.users.find(u => u.id === id); }
+  findUserByUsername(u) { return this.data.users.find(x => x.username.toLowerCase() === u.toLowerCase()); }
+  findUserById(id) { return this.data.users.find(x => x.id === id); }
   searchUsers(q, excludeId) {
     return this.data.users
       .filter(u => u.username.toLowerCase().includes(q.toLowerCase()) && u.id !== excludeId)
@@ -65,9 +61,25 @@ class Store {
 
 const db = new Store(path.join(__dirname, 'chat.db.json'));
 
-// Uploads stored on your machine
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+
+function cleanupExpired() {
+  const cutoff = Math.floor(Date.now() / 1000) - 24 * 3600;
+  const toDelete = db.data.messages.filter(m => !m.saved && m.created_at <= cutoff);
+  if (!toDelete.length) return;
+  for (const msg of toDelete) {
+    if (msg.file_id) {
+      const fp = path.join(uploadsDir, msg.file_id);
+      if (fs.existsSync(fp)) { try { fs.unlinkSync(fp); } catch {} }
+    }
+  }
+  const before = db.data.messages.length;
+  db.data.messages = db.data.messages.filter(m => m.saved || m.created_at > cutoff);
+  if (db.data.messages.length < before) { db.save(); console.log('Cleaned up', before - db.data.messages.length, 'expired messages'); }
+}
+cleanupExpired();
+setInterval(cleanupExpired, 60 * 60 * 1000);
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -105,15 +117,12 @@ app.get('/api/users/search', auth, (req, res) => {
   const q = (req.query.q || '').trim();
   res.json(q ? db.searchUsers(q, req.user.id) : []);
 });
-
 app.get('/api/users/:id', auth, (req, res) => {
   const u = db.findUserById(req.params.id);
   if (!u) return res.status(404).json({ error: 'Not found' });
   res.json({ id: u.id, username: u.username, public_key: u.public_key });
 });
-
 app.get('/api/conversations', auth, (req, res) => res.json(db.getConversations(req.user.id)));
-
 app.get('/api/messages/:userId', auth, (req, res) => {
   const msgs = db.getMessages(req.user.id, req.params.userId).map(m => ({
     ...m, sender_username: (db.findUserById(m.sender_id) || {}).username || '?'
@@ -121,18 +130,65 @@ app.get('/api/messages/:userId', auth, (req, res) => {
   res.json(msgs);
 });
 
+// Save a message forever
+app.post('/api/messages/:id/save', auth, (req, res) => {
+  const msg = db.data.messages.find(m => m.id === req.params.id);
+  if (!msg) return res.status(404).json({ error: 'Not found' });
+  if (msg.sender_id !== req.user.id && msg.recipient_id !== req.user.id)
+    return res.status(403).json({ error: 'Forbidden' });
+  msg.saved = true;
+  db.save();
+  const otherId = msg.sender_id === req.user.id ? msg.recipient_id : msg.sender_id;
+  io.to(otherId).emit('message_saved', { id: msg.id });
+  res.json({ ok: true });
+});
+
+// Delete a message (either participant can delete for everyone)
+app.delete('/api/messages/:id', auth, (req, res) => {
+  const msg = db.data.messages.find(m => m.id === req.params.id);
+  if (!msg) return res.status(404).json({ error: 'Not found' });
+  if (msg.sender_id !== req.user.id && msg.recipient_id !== req.user.id)
+    return res.status(403).json({ error: 'Forbidden' });
+  if (msg.file_id) {
+    const fp = path.join(uploadsDir, msg.file_id);
+    if (fs.existsSync(fp)) { try { fs.unlinkSync(fp); } catch {} }
+  }
+  const otherId = msg.sender_id === req.user.id ? msg.recipient_id : msg.sender_id;
+  db.data.messages = db.data.messages.filter(m => m.id !== req.params.id);
+  db.save();
+  io.to(otherId).emit('message_deleted', { id: req.params.id });
+  io.to(req.user.id).emit('message_deleted', { id: req.params.id });
+  res.json({ ok: true });
+});
+
+// Edit a message (only sender can edit)
+app.post('/api/messages/:id/edit', auth, (req, res) => {
+  const msg = db.data.messages.find(m => m.id === req.params.id);
+  if (!msg) return res.status(404).json({ error: 'Not found' });
+  if (msg.sender_id !== req.user.id) return res.status(403).json({ error: 'Only the sender can edit' });
+  const { ciphertext, iv, recipientKey, senderKey } = req.body;
+  if (!ciphertext || !iv || !recipientKey || !senderKey) return res.status(400).json({ error: 'Missing fields' });
+  msg.ciphertext = ciphertext;
+  msg.iv = iv;
+  msg.recipient_key = recipientKey;
+  msg.sender_key = senderKey;
+  msg.edited_at = Math.floor(Date.now() / 1000);
+  db.save();
+  const payload = { id: msg.id, ciphertext, iv, recipientKey, senderKey, edited_at: msg.edited_at };
+  io.to(msg.recipient_id).emit('message_edited', payload);
+  io.to(msg.sender_id).emit('message_edited', payload);
+  res.json({ ok: true });
+});
+
 const onlineUsers = new Map();
 app.get('/api/online', auth, (req, res) => res.json({ online: [...onlineUsers.keys()] }));
 
-// File upload - stored on your machine
 app.post('/api/upload', auth, express.raw({ limit: '200mb', type: () => true }), (req, res) => {
   if (!req.body || !req.body.length) return res.status(400).json({ error: 'No data' });
   const fileId = uuidv4();
   fs.writeFileSync(path.join(uploadsDir, fileId), req.body);
   res.json({ fileId });
 });
-
-// Serve encrypted file
 app.get('/api/files/:fileId', auth, (req, res) => {
   const fileId = path.basename(req.params.fileId);
   const filePath = path.join(uploadsDir, fileId);
@@ -153,11 +209,13 @@ io.on('connection', (socket) => {
   socket.join(socket.user.id);
   io.emit('user_online', socket.user.id);
   socket.on('send_message', (data) => {
-    const { recipientId, ciphertext, iv, recipientKey, senderKey } = data;
+    const { recipientId, ciphertext, iv, recipientKey, senderKey, fileId } = data;
     if (!recipientId || !ciphertext || !iv || !recipientKey || !senderKey) return;
     const id = uuidv4();
     const created_at = Math.floor(Date.now() / 1000);
-    const msg = { id, sender_id: socket.user.id, recipient_id: recipientId, ciphertext, iv, recipient_key: recipientKey, sender_key: senderKey, created_at };
+    const msg = { id, sender_id: socket.user.id, recipient_id: recipientId, ciphertext, iv,
+                  recipient_key: recipientKey, sender_key: senderKey, created_at,
+                  saved: false, file_id: fileId || null };
     db.addMessage(msg);
     const full = { ...msg, sender_username: socket.user.username };
     io.to(recipientId).emit('new_message', full);
@@ -182,16 +240,13 @@ httpServer.listen(PORT, () => {
         console.log('Network: http://' + net.address + ':' + PORT);
 });
 
-// Optional public tunnel: node server.js --public
 if (process.argv.includes('--public')) {
   const localtunnel = require('localtunnel');
   httpServer.once('listening', async () => {
     try {
       console.log('Starting public tunnel...');
       const tunnel = await localtunnel({ port: PORT });
-      console.log('');
       console.log('PUBLIC URL (share with friend): ' + tunnel.url);
-      console.log('');
       tunnel.on('close', () => console.log('Tunnel closed.'));
       tunnel.on('error', e => console.error('Tunnel error:', e.message));
     } catch(e) { console.error('Could not create tunnel:', e.message); }

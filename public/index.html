@@ -2,21 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>SecureChat</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
   --bg: #17212b; --sidebar: #212d3b; --surface: #182533; --surface2: #1e2c3a;
-  --sent: #2b5278; --received: #182533; --accent: #5288c1; --accent2: #64b5f6;
+  --sent: #2b5278; --received: #182533; --accent: #5288c1;
   --text: #e8f4fd; --text2: #a3b8cc; --border: #2a3a4a; --hover: #293d54;
   --danger: #e57373; --online: #4caf50; --input-bg: #1e2c3a;
 }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-
-/* Auth */
 #auth-screen { width: 100%; height: 100vh; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at center, #1e2c3a 0%, #17212b 100%); }
-.auth-box { background: var(--sidebar); border: 1px solid var(--border); border-radius: 16px; padding: 40px; width: 360px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+.auth-box { background: var(--sidebar); border: 1px solid var(--border); border-radius: 16px; padding: 40px; width: 360px; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
 .auth-logo { text-align: center; margin-bottom: 28px; }
 .auth-logo svg { width: 64px; height: 64px; }
 .auth-logo h1 { font-size: 26px; font-weight: 700; margin-top: 12px; }
@@ -34,17 +32,15 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
 .auth-error { background: rgba(229,115,115,.15); border: 1px solid rgba(229,115,115,.3); color: var(--danger); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-top: 12px; display: none; }
 .enc-note { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); margin-top: 18px; justify-content: center; }
-
-/* App */
 #app { display: none; width: 100vw; height: 100vh; }
 .app-layout { display: flex; height: 100vh; }
 
-/* Sidebar */
-#sidebar { width: 320px; min-width: 260px; background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+/* SIDEBAR */
+#sidebar { width: 320px; min-width: 260px; background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; transition: transform .25s; }
 .sidebar-header { padding: 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
 .sidebar-header h2 { font-size: 18px; font-weight: 700; flex: 1; }
-.me-badge { font-size: 12px; color: var(--text2); background: var(--surface2); padding: 3px 8px; border-radius: 10px; }
-.logout-btn { background: none; border: none; color: var(--text2); cursor: pointer; padding: 6px; border-radius: 6px; display: flex; align-items: center; transition: color .2s, background .2s; }
+.me-badge { font-size: 12px; color: var(--text2); background: var(--surface2); padding: 3px 8px; border-radius: 10px; white-space: nowrap; }
+.logout-btn { background: none; border: none; color: var(--text2); cursor: pointer; padding: 6px; border-radius: 6px; display: flex; align-items: center; transition: color .2s, background .2s; flex-shrink: 0; }
 .logout-btn:hover { color: var(--danger); background: rgba(229,115,115,.1); }
 .search-wrap { padding: 12px 16px; border-bottom: 1px solid var(--border); }
 .search-input { width: 100%; padding: 10px 14px 10px 38px; background: var(--input-bg); border: 1px solid var(--border); border-radius: 24px; color: var(--text); font-size: 14px; outline: none; transition: border .2s; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a3b8cc' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 12px center; }
@@ -65,30 +61,47 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .conv-time { font-size: 11px; color: var(--text2); }
 .empty-convs { padding: 32px 16px; text-align: center; color: var(--text2); font-size: 14px; }
 
-/* Chat area */
-#chat-area { flex: 1; display: flex; flex-direction: column; background: var(--bg); }
+/* CHAT AREA */
+#chat-area { flex: 1; display: flex; flex-direction: column; background: var(--bg); min-width: 0; }
 .no-chat { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text2); gap: 12px; }
 .no-chat h3 { font-size: 20px; color: var(--text); opacity: .5; }
 .no-chat p { font-size: 14px; }
 .chat-header { display: none; align-items: center; gap: 12px; padding: 14px 20px; background: var(--sidebar); border-bottom: 1px solid var(--border); }
-.chat-header-info { flex: 1; }
+.chat-header-info { flex: 1; min-width: 0; }
 .chat-header-name { font-size: 16px; font-weight: 700; }
 .chat-header-sub { font-size: 12px; color: var(--text2); margin-top: 1px; }
-.enc-badge { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--online); background: rgba(76,175,80,.1); padding: 4px 10px; border-radius: 12px; }
+.enc-badge { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--online); background: rgba(76,175,80,.1); padding: 4px 10px; border-radius: 12px; flex-shrink: 0; }
 .messages-wrap { flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 4px; }
 .day-divider { text-align: center; font-size: 12px; color: var(--text2); margin: 12px 0; display: flex; align-items: center; gap: 12px; }
 .day-divider::before, .day-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* MESSAGE ROW */
 .msg-row { display: flex; flex-direction: column; max-width: 72%; gap: 2px; }
 .msg-row.sent { align-self: flex-end; align-items: flex-end; }
 .msg-row.received { align-self: flex-start; align-items: flex-start; }
-.msg-bubble { padding: 8px 14px; border-radius: 16px; font-size: 14.5px; line-height: 1.5; word-break: break-word; }
+.msg-bubble-row { display: flex; align-items: flex-end; gap: 6px; }
+.msg-row.sent .msg-bubble-row { flex-direction: row-reverse; }
+.msg-content-wrap { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.msg-bubble { padding: 8px 14px; border-radius: 16px; font-size: 14.5px; line-height: 1.5; word-break: break-word; cursor: pointer; transition: opacity .15s; }
+.msg-bubble:hover { opacity: .88; }
 .msg-row.sent .msg-bubble { background: var(--sent); border-bottom-right-radius: 4px; }
 .msg-row.received .msg-bubble { background: var(--received); border-bottom-left-radius: 4px; border: 1px solid var(--border); }
-.msg-meta { font-size: 11px; color: var(--text2); display: flex; align-items: center; gap: 4px; padding: 0 4px; }
+.msg-meta { font-size: 11px; color: var(--text2); display: flex; align-items: center; gap: 4px; padding: 0 4px; user-select: none; }
 .lock-icon { opacity: .6; }
+.expiry-tag { color: var(--text2); opacity: .7; font-size: 10px; }
+.saved-tag { color: var(--accent); font-size: 10px; font-weight: 600; }
+.edited-tag { color: var(--text2); font-size: 10px; opacity: .6; font-style: italic; }
+
+/* MESSAGE ACTIONS */
+.msg-actions { display: flex; flex-direction: column; gap: 3px; opacity: 0; transition: opacity .15s; flex-shrink: 0; }
+.msg-row:hover .msg-actions { opacity: 1; }
+.msg-action-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: 4px 7px; font-size: 12px; cursor: pointer; transition: all .15s; line-height: 1; white-space: nowrap; }
+.msg-action-btn:hover { background: var(--hover); color: var(--text); }
+.msg-action-btn.danger:hover { background: rgba(229,115,115,.15); color: var(--danger); border-color: rgba(229,115,115,.4); }
+
 .typing-indicator { display: none; padding: 4px 20px; font-size: 13px; color: var(--text2); font-style: italic; }
 
-/* Chat input */
+/* INPUT AREA */
 .chat-input-area { display: none; padding: 10px 16px; background: var(--sidebar); border-top: 1px solid var(--border); flex-direction: column; gap: 8px; }
 .chat-input-row { display: flex; align-items: flex-end; gap: 8px; }
 .chat-input { flex: 1; padding: 11px 14px; background: var(--input-bg); border: 1px solid var(--border); border-radius: 24px; color: var(--text); font-size: 15px; outline: none; resize: none; max-height: 120px; line-height: 1.4; transition: border .2s; font-family: inherit; }
@@ -100,17 +113,34 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .attach-btn { width: 40px; height: 40px; background: var(--surface2); border: 1px solid var(--border); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .2s; flex-shrink: 0; color: var(--text2); }
 .attach-btn:hover { background: var(--hover); color: var(--text); }
 
-/* Upload progress */
+/* STAGED FILE PREVIEW */
+.staged-file-bar { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--surface2); border: 1px solid var(--accent); border-radius: 12px; }
+.staged-thumb { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
+.staged-thumb-icon { width: 48px; height: 48px; border-radius: 8px; background: var(--hover); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+.staged-info { flex: 1; min-width: 0; }
+.staged-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.staged-size { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.staged-cancel { background: none; border: none; color: var(--text2); cursor: pointer; font-size: 20px; padding: 4px 6px; line-height: 1; border-radius: 6px; flex-shrink: 0; }
+.staged-cancel:hover { color: var(--danger); background: rgba(229,115,115,.1); }
+
+/* EDIT MODE BAR */
+.edit-mode-bar { display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: rgba(82,136,193,.1); border: 1px solid rgba(82,136,193,.3); border-radius: 10px; font-size: 12px; color: var(--accent); }
+.edit-cancel-btn { background: none; border: none; color: var(--text2); cursor: pointer; font-size: 16px; padding: 2px 6px; line-height: 1; margin-left: auto; border-radius: 6px; }
+.edit-cancel-btn:hover { color: var(--danger); background: rgba(229,115,115,.1); }
+
+/* UPLOAD PROGRESS */
 .upload-progress { display: none; align-items: center; gap: 10px; padding: 0 4px; }
 .upload-progress-track { flex: 1; height: 4px; background: var(--border); border-radius: 4px; overflow: hidden; }
 .upload-progress-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width .2s; width: 0%; }
 .upload-progress-label { font-size: 12px; color: var(--text2); white-space: nowrap; }
 
-/* File messages */
-.msg-img-wrap { border-radius: 12px; overflow: hidden; max-width: 280px; background: var(--surface2); min-height: 60px; position: relative; cursor: pointer; }
+/* FILE / IMAGE ELEMENTS */
+.msg-img-wrap { border-radius: 12px; overflow: hidden; max-width: 280px; background: var(--surface2); position: relative; cursor: pointer; transition: opacity .15s; }
+.msg-img-wrap:hover { opacity: .88; }
 .msg-img-wrap img { display: block; width: 100%; max-width: 280px; border-radius: 12px; }
 .img-placeholder { padding: 16px; color: var(--text2); font-size: 13px; text-align: center; }
-.msg-file-card { border-radius: 12px; background: var(--surface2); border: 1px solid var(--border); overflow: hidden; max-width: 280px; }
+.msg-file-card { border-radius: 12px; background: var(--surface2); border: 1px solid var(--border); overflow: hidden; max-width: 280px; cursor: pointer; transition: opacity .15s; }
+.msg-file-card:hover { opacity: .88; }
 .file-card-inner { display: flex; align-items: center; gap: 10px; padding: 12px 14px; }
 .file-icon { font-size: 28px; flex-shrink: 0; line-height: 1; }
 .file-card-info { flex: 1; min-width: 0; }
@@ -120,12 +150,13 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .file-dl-btn:hover { background: #4a7ab5; }
 .file-dl-btn:disabled { opacity: .5; cursor: not-allowed; }
 
-/* Video modal */
 .video-modal { position: fixed; inset: 0; background: rgba(0,0,0,.92); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
 .video-modal-bar { display: flex; align-items: center; gap: 12px; color: white; font-size: 14px; }
 .video-modal-close { background: rgba(255,255,255,.1); border: none; color: white; padding: 6px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; }
 .video-modal-close:hover { background: rgba(255,255,255,.2); }
 
+@keyframes save-flash { 0%,100%{opacity:1} 50%{opacity:.5;box-shadow:0 0 0 3px rgba(82,136,193,.4)} }
+.save-flash { animation: save-flash .4s ease; }
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
@@ -133,22 +164,39 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .toast.show { transform: translateX(-50%) translateY(0); }
 .spinner { width: 20px; height: 20px; border: 2px solid rgba(255,255,255,.2); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; display: inline-block; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* MOBILE ELEMENTS (hidden on desktop) */
+.mob-back-btn { display: none; width: 38px; height: 38px; background: none; border: none; color: var(--text); cursor: pointer; border-radius: 8px; align-items: center; justify-content: center; flex-shrink: 0; font-size: 22px; }
+.mob-back-btn:hover { background: var(--hover); }
+.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 199; }
+
+/* MOBILE RESPONSIVE */
+@media (max-width: 700px) {
+  .auth-box { width: 94vw; padding: 28px 20px; }
+  #sidebar {
+    position: fixed; left: 0; top: 0; bottom: 0; z-index: 200;
+    width: 100vw !important; min-width: unset;
+    transform: translateX(-100%);
+    transition: transform .25s ease;
+    box-shadow: 4px 0 20px rgba(0,0,0,.4);
+  }
+  #sidebar.mob-open { transform: translateX(0); }
+  .sidebar-overlay.visible { display: block; }
+  .mob-back-btn { display: flex; }
+  .msg-actions { opacity: 1 !important; }
+  .msg-row { max-width: 88%; }
+  .chat-header { padding: 10px 14px; }
+  .messages-wrap { padding: 12px 12px; }
+  .chat-input-area { padding: 8px 10px; }
+}
 </style>
 </head>
 <body>
-
 <div id="auth-screen">
   <div class="auth-box">
     <div class="auth-logo">
-      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="32" cy="32" r="32" fill="#2b5278"/>
-        <path d="M14 32C14 22.059 22.059 14 32 14s18 8.059 18 18-8.059 18-18 18-18-8.059-18-18z" fill="#5288c1"/>
-        <path d="M24 28h16M24 34h10" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-        <circle cx="44" cy="20" r="8" fill="#4caf50"/>
-        <path d="M40 20l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      <h1>SecureChat</h1>
-      <p>End-to-end encrypted messaging</p>
+      <svg viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="32" fill="#2b5278"/><path d="M14 32C14 22.059 22.059 14 32 14s18 8.059 18 18-8.059 18-18 18-18-8.059-18-18z" fill="#5288c1"/><path d="M24 28h16M24 34h10" stroke="white" stroke-width="2.5" stroke-linecap="round"/><circle cx="44" cy="20" r="8" fill="#4caf50"/><path d="M40 20l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <h1>SecureChat</h1><p>End-to-end encrypted messaging</p>
     </div>
     <div class="auth-tabs">
       <div class="auth-tab active" onclick="switchTab('login')">Sign In</div>
@@ -168,12 +216,13 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
     <div class="auth-error" id="auth-error"></div>
     <div class="enc-note">
       <svg width="12" height="14" viewBox="0 0 12 14" fill="none"><rect x="2" y="6" width="8" height="7" rx="1.5" fill="#4caf50"/><path d="M3.5 6V4a2.5 2.5 0 015 0v2" stroke="#4caf50" stroke-width="1.5"/></svg>
-      Your messages and files are end-to-end encrypted
+      Messages and files are end-to-end encrypted
     </div>
   </div>
 </div>
 
 <div id="app">
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
   <div class="app-layout">
     <div id="sidebar">
       <div class="sidebar-header">
@@ -195,14 +244,13 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
         </div>
       </div>
     </div>
-
     <div id="chat-area">
       <div class="no-chat" id="no-chat">
         <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" opacity="0.3"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-        <h3>Select a chat</h3>
-        <p>Search for people or open a conversation</p>
+        <h3>Select a chat</h3><p>Search for people or open a conversation</p>
       </div>
       <div class="chat-header" id="chat-header">
+        <button class="mob-back-btn" onclick="openSidebar()" title="Back">&#8592;</button>
         <div class="avatar sm" id="chat-avatar">?</div>
         <div class="chat-header-info">
           <div class="chat-header-name" id="chat-name">-</div>
@@ -210,12 +258,21 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
         </div>
         <div class="enc-badge">
           <svg width="12" height="14" viewBox="0 0 12 14" fill="none"><rect x="2" y="6" width="8" height="7" rx="1.5" fill="#4caf50"/><path d="M3.5 6V4a2.5 2.5 0 015 0v2" stroke="#4caf50" stroke-width="1.5"/></svg>
-          Encrypted
+          E2E Encrypted
         </div>
       </div>
       <div class="messages-wrap" id="messages-wrap"></div>
       <div class="typing-indicator" id="typing-indicator">typing...</div>
       <div class="chat-input-area" id="chat-input-area">
+        <!-- Staged file preview -->
+        <div id="staged-file" class="staged-file-bar" style="display:none"></div>
+        <!-- Edit mode indicator -->
+        <div id="edit-mode-bar" class="edit-mode-bar" style="display:none">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          <span>Editing message</span>
+          <button class="edit-cancel-btn" onclick="cancelEdit()" title="Cancel">&#215;</button>
+        </div>
+        <!-- Upload progress -->
         <div class="upload-progress" id="upload-progress">
           <div class="upload-progress-track"><div class="upload-progress-fill" id="upload-progress-fill"></div></div>
           <span class="upload-progress-label" id="upload-progress-label">Uploading...</span>
@@ -235,502 +292,551 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
     </div>
   </div>
 </div>
-
 <div class="toast" id="toast"></div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-// ── CRYPTO ────────────────────────────────────────────────────────────────────
-function b64(buf) { return btoa(String.fromCharCode(...new Uint8Array(buf))); }
-function unb64(str) { return Uint8Array.from(atob(str), c => c.charCodeAt(0)); }
-
-async function generateKeyPair() {
-  return crypto.subtle.generateKey(
-    { name: 'RSA-OAEP', modulusLength: 2048, publicExponent: new Uint8Array([1,0,1]), hash: 'SHA-256' },
-    true, ['encrypt', 'decrypt']
-  );
+// CRYPTO
+function b64(buf){return btoa(String.fromCharCode(...new Uint8Array(buf)));}
+function unb64(s){return Uint8Array.from(atob(s),c=>c.charCodeAt(0));}
+async function generateKeyPair(){return crypto.subtle.generateKey({name:'RSA-OAEP',modulusLength:2048,publicExponent:new Uint8Array([1,0,1]),hash:'SHA-256'},true,['encrypt','decrypt']);}
+async function exportPublicKey(k){return JSON.stringify(await crypto.subtle.exportKey('jwk',k));}
+async function importPublicKey(s){return crypto.subtle.importKey('jwk',JSON.parse(s),{name:'RSA-OAEP',hash:'SHA-256'},true,['encrypt']);}
+async function importPrivateKey(s){return crypto.subtle.importKey('jwk',JSON.parse(s),{name:'RSA-OAEP',hash:'SHA-256'},true,['decrypt']);}
+async function encryptPrivateKey(jwk,pw){
+  const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12)),enc=new TextEncoder();
+  const base=await crypto.subtle.importKey('raw',enc.encode(pw),'PBKDF2',false,['deriveKey']);
+  const aes=await crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:200000,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['encrypt']);
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},aes,enc.encode(jwk));
+  return{salt:b64(salt),iv:b64(iv),data:b64(ct)};
 }
-async function exportPublicKey(key) { return JSON.stringify(await crypto.subtle.exportKey('jwk', key)); }
-async function importPublicKey(jwkStr) {
-  return crypto.subtle.importKey('jwk', JSON.parse(jwkStr), { name: 'RSA-OAEP', hash: 'SHA-256' }, true, ['encrypt']);
-}
-async function importPrivateKey(jwkStr) {
-  return crypto.subtle.importKey('jwk', JSON.parse(jwkStr), { name: 'RSA-OAEP', hash: 'SHA-256' }, true, ['decrypt']);
-}
-
-async function encryptPrivateKey(jwk, password) {
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  const iv   = crypto.getRandomValues(new Uint8Array(12));
-  const enc  = new TextEncoder();
-  const base = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
-  const aes  = await crypto.subtle.deriveKey(
-    { name: 'PBKDF2', salt, iterations: 200000, hash: 'SHA-256' },
-    base, { name: 'AES-GCM', length: 256 }, false, ['encrypt']
-  );
-  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, aes, enc.encode(jwk));
-  return { salt: b64(salt), iv: b64(iv), data: b64(ct) };
-}
-async function decryptPrivateKey(stored, password) {
-  const enc  = new TextEncoder();
-  const base = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
-  const aes  = await crypto.subtle.deriveKey(
-    { name: 'PBKDF2', salt: unb64(stored.salt), iterations: 200000, hash: 'SHA-256' },
-    base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']
-  );
-  const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(stored.iv) }, aes, unb64(stored.data));
+async function decryptPrivateKey(stored,pw){
+  const enc=new TextEncoder();
+  const base=await crypto.subtle.importKey('raw',enc.encode(pw),'PBKDF2',false,['deriveKey']);
+  const aes=await crypto.subtle.deriveKey({name:'PBKDF2',salt:unb64(stored.salt),iterations:200000,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['decrypt']);
+  const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(stored.iv)},aes,unb64(stored.data));
   return new TextDecoder().decode(plain);
 }
-
-// Message encryption (payload = object or string)
-async function encryptMessage(payload, recipPub, senderPub) {
-  const text = typeof payload === 'string' ? payload : JSON.stringify(payload);
-  const aes  = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['encrypt']);
-  const iv   = crypto.getRandomValues(new Uint8Array(12));
-  const ct   = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, aes, new TextEncoder().encode(text));
-  const raw  = await crypto.subtle.exportKey('raw', aes);
-  return {
-    ciphertext:   b64(ct),
-    iv:           b64(iv),
-    recipientKey: b64(await crypto.subtle.encrypt({ name: 'RSA-OAEP' }, recipPub, raw)),
-    senderKey:    b64(await crypto.subtle.encrypt({ name: 'RSA-OAEP' }, senderPub, raw))
-  };
+async function encryptMessage(payload,recipPub,senderPub){
+  const text=typeof payload==='string'?payload:JSON.stringify(payload);
+  const aes=await crypto.subtle.generateKey({name:'AES-GCM',length:256},true,['encrypt']);
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},aes,new TextEncoder().encode(text));
+  const raw=await crypto.subtle.exportKey('raw',aes);
+  return{ciphertext:b64(ct),iv:b64(iv),recipientKey:b64(await crypto.subtle.encrypt({name:'RSA-OAEP'},recipPub,raw)),senderKey:b64(await crypto.subtle.encrypt({name:'RSA-OAEP'},senderPub,raw))};
 }
-async function decryptMessage(msg, privKey, isSender) {
-  const encKey = unb64(isSender ? msg.sender_key : msg.recipient_key);
-  const raw    = await crypto.subtle.decrypt({ name: 'RSA-OAEP' }, privKey, encKey);
-  const aes    = await crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, ['decrypt']);
-  const plain  = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(msg.iv) }, aes, unb64(msg.ciphertext));
+async function decryptMessage(msg,privKey,isSender){
+  const raw=await crypto.subtle.decrypt({name:'RSA-OAEP'},privKey,unb64(isSender?msg.sender_key:msg.recipient_key));
+  const aes=await crypto.subtle.importKey('raw',raw,{name:'AES-GCM'},false,['decrypt']);
+  const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(msg.iv)},aes,unb64(msg.ciphertext));
   return new TextDecoder().decode(plain);
 }
-
-// File encryption
-async function encryptFileBuffer(buffer) {
-  const key = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['encrypt']);
-  const iv  = crypto.getRandomValues(new Uint8Array(12));
-  const ct  = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, buffer);
-  const raw = await crypto.subtle.exportKey('raw', key);
-  return { encrypted: ct, key: b64(raw), iv: b64(iv) };
+async function encryptFileBuffer(buf){
+  const key=await crypto.subtle.generateKey({name:'AES-GCM',length:256},true,['encrypt']);
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,buf);
+  const raw=await crypto.subtle.exportKey('raw',key);
+  return{encrypted:ct,key:b64(raw),iv:b64(iv)};
 }
-async function decryptFileBuffer(encBuf, keyB64, ivB64) {
-  const key = await crypto.subtle.importKey('raw', unb64(keyB64), { name: 'AES-GCM' }, false, ['decrypt']);
-  return crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(ivB64) }, key, encBuf);
+async function decryptFileBuffer(encBuf,keyB64,ivB64){
+  const key=await crypto.subtle.importKey('raw',unb64(keyB64),{name:'AES-GCM'},false,['decrypt']);
+  return crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(ivB64)},key,encBuf);
 }
 
-// ── STATE ─────────────────────────────────────────────────────────────────────
-let state = {
-  token: null, userId: null, username: null, privateKey: null, publicKeyJwk: null,
-  currentChatUserId: null, currentChatUsername: null, currentChatPubKey: null,
-  onlineUsers: new Set(), socket: null, typingTimeout: null, conversations: [],
-  cachedPublicKeys: {}
+// STATE
+let state={
+  token:null,userId:null,username:null,privateKey:null,publicKeyJwk:null,
+  currentChatUserId:null,currentChatUsername:null,currentChatPubKey:null,
+  onlineUsers:new Set(),socket:null,typingTimeout:null,conversations:[],
+  cachedPublicKeys:{},
+  stagedFile:null,      // { file, previewUrl }
+  editingMsgId:null,    // id of message being edited
+  decryptedMsgs:new Map() // id -> content object
 };
 
-// ── AUTH ──────────────────────────────────────────────────────────────────────
-function switchTab(tab) {
-  document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (i===0)===(tab==='login')));
-  document.getElementById('login-form').style.display    = tab==='login' ? '' : 'none';
-  document.getElementById('register-form').style.display = tab==='register' ? '' : 'none';
-  hideAuthError();
-}
-function showAuthError(msg) { const e=document.getElementById('auth-error'); e.textContent=msg; e.style.display='block'; }
-function hideAuthError() { document.getElementById('auth-error').style.display='none'; }
+// MOBILE SIDEBAR
+function openSidebar(){document.getElementById('sidebar').classList.add('mob-open');document.getElementById('sidebar-overlay').classList.add('visible');}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('mob-open');document.getElementById('sidebar-overlay').classList.remove('visible');}
 
-async function doLogin() {
+// AUTH
+function switchTab(tab){document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('active',(i===0)===(tab==='login')));document.getElementById('login-form').style.display=tab==='login'?'':'none';document.getElementById('register-form').style.display=tab==='register'?'':'none';hideAuthError();}
+function showAuthError(msg){const e=document.getElementById('auth-error');e.textContent=msg;e.style.display='block';}
+function hideAuthError(){document.getElementById('auth-error').style.display='none';}
+
+async function doLogin(){
   hideAuthError();
-  const username = document.getElementById('login-user').value.trim();
-  const password = document.getElementById('login-pass').value;
-  if (!username||!password) return showAuthError('Please fill in all fields');
-  const btn = document.getElementById('login-btn');
-  btn.disabled=true; btn.innerHTML='<span class="spinner"></span>';
-  try {
-    const res  = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username,password}) });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error);
-    const stored = localStorage.getItem('securechat_privkey_'+username);
-    if (!stored) throw new Error('Private key not found on this device. Register again or use your original device.');
-    const privJwk = await decryptPrivateKey(JSON.parse(stored), password);
-    const privateKey = await importPrivateKey(privJwk);
-    state.token=data.token; state.userId=data.id; state.username=data.username;
-    state.privateKey=privateKey; state.publicKeyJwk=data.publicKey;
+  const username=document.getElementById('login-user').value.trim(),password=document.getElementById('login-pass').value;
+  if(!username||!password)return showAuthError('Please fill in all fields');
+  const btn=document.getElementById('login-btn');btn.disabled=true;btn.innerHTML='<span class="spinner"></span>';
+  try{
+    const res=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})});
+    const data=await res.json();if(!res.ok)throw new Error(data.error);
+    const stored=localStorage.getItem('securechat_privkey_'+username);
+    if(!stored)throw new Error('Private key not found on this device. Register again or use your original device.');
+    const privJwk=await decryptPrivateKey(JSON.parse(stored),password);
+    const privateKey=await importPrivateKey(privJwk);
+    state.token=data.token;state.userId=data.id;state.username=data.username;state.privateKey=privateKey;state.publicKeyJwk=data.publicKey;
     await launchApp();
-  } catch(e) { showAuthError(e.message); btn.disabled=false; btn.textContent='Sign In'; }
+  }catch(e){showAuthError(e.message);btn.disabled=false;btn.textContent='Sign In';}
 }
-
-async function doRegister() {
+async function doRegister(){
   hideAuthError();
-  const username = document.getElementById('reg-user').value.trim();
-  const password = document.getElementById('reg-pass').value;
-  const pass2    = document.getElementById('reg-pass2').value;
-  if (!username||!password) return showAuthError('Please fill in all fields');
-  if (password!==pass2) return showAuthError('Passwords do not match');
-  if (password.length<6) return showAuthError('Password must be at least 6 characters');
-  const btn = document.getElementById('reg-btn');
-  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Generating keys...';
-  try {
-    const keyPair  = await generateKeyPair();
-    const pubJwk   = await exportPublicKey(keyPair.publicKey);
-    const privJwk  = JSON.stringify(await crypto.subtle.exportKey('jwk', keyPair.privateKey));
-    const encKey   = await encryptPrivateKey(privJwk, password);
-    localStorage.setItem('securechat_privkey_'+username, JSON.stringify(encKey));
-    const res  = await fetch('/api/register', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username,password,publicKey:pubJwk}) });
-    const data = await res.json();
-    if (!res.ok) { localStorage.removeItem('securechat_privkey_'+username); throw new Error(data.error); }
-    state.token=data.token; state.userId=data.id; state.username=data.username;
-    state.privateKey=keyPair.privateKey; state.publicKeyJwk=pubJwk;
+  const username=document.getElementById('reg-user').value.trim(),password=document.getElementById('reg-pass').value,pass2=document.getElementById('reg-pass2').value;
+  if(!username||!password)return showAuthError('Please fill in all fields');
+  if(password!==pass2)return showAuthError('Passwords do not match');
+  if(password.length<6)return showAuthError('Password must be at least 6 characters');
+  const btn=document.getElementById('reg-btn');btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Generating keys...';
+  try{
+    const kp=await generateKeyPair(),pubJwk=await exportPublicKey(kp.publicKey);
+    const privJwk=JSON.stringify(await crypto.subtle.exportKey('jwk',kp.privateKey));
+    const encKey=await encryptPrivateKey(privJwk,password);
+    localStorage.setItem('securechat_privkey_'+username,JSON.stringify(encKey));
+    const res=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password,publicKey:pubJwk})});
+    const data=await res.json();if(!res.ok){localStorage.removeItem('securechat_privkey_'+username);throw new Error(data.error);}
+    state.token=data.token;state.userId=data.id;state.username=data.username;state.privateKey=kp.privateKey;state.publicKeyJwk=pubJwk;
     await launchApp();
-  } catch(e) { showAuthError(e.message); btn.disabled=false; btn.textContent='Create Account'; }
+  }catch(e){showAuthError(e.message);btn.disabled=false;btn.textContent='Create Account';}
 }
-
-function doLogout() {
-  if (state.socket) state.socket.disconnect();
-  state = { token:null,userId:null,username:null,privateKey:null,publicKeyJwk:null,
-            currentChatUserId:null,currentChatUsername:null,currentChatPubKey:null,
-            onlineUsers:new Set(),socket:null,typingTimeout:null,conversations:[],cachedPublicKeys:{} };
-  document.getElementById('app').style.display='none';
-  document.getElementById('auth-screen').style.display='flex';
-  document.getElementById('login-user').value='';
-  document.getElementById('login-pass').value='';
-  document.getElementById('login-btn').textContent='Sign In';
-  document.getElementById('login-btn').disabled=false;
+function doLogout(){
+  if(state.socket)state.socket.disconnect();
+  cancelStagedFile();cancelEdit();
+  state={token:null,userId:null,username:null,privateKey:null,publicKeyJwk:null,currentChatUserId:null,currentChatUsername:null,currentChatPubKey:null,onlineUsers:new Set(),socket:null,typingTimeout:null,conversations:[],cachedPublicKeys:{},stagedFile:null,editingMsgId:null,decryptedMsgs:new Map()};
+  document.getElementById('app').style.display='none';document.getElementById('auth-screen').style.display='flex';
+  document.getElementById('login-user').value='';document.getElementById('login-pass').value='';
+  document.getElementById('login-btn').textContent='Sign In';document.getElementById('login-btn').disabled=false;
   switchTab('login');
 }
 
-// ── APP ───────────────────────────────────────────────────────────────────────
-async function launchApp() {
-  document.getElementById('auth-screen').style.display='none';
-  document.getElementById('app').style.display='block';
+// APP
+async function launchApp(){
+  document.getElementById('auth-screen').style.display='none';document.getElementById('app').style.display='block';
   document.getElementById('me-badge').textContent='@'+state.username;
-  await loadConversations();
-  connectSocket();
+  await loadConversations();connectSocket();
 }
 
-// ── SOCKET ────────────────────────────────────────────────────────────────────
-function connectSocket() {
-  if (state.socket) state.socket.disconnect();
-  state.socket = io({ auth: { token: state.token } });
-  state.socket.on('new_message', async (msg) => {
-    if (msg.sender_id===state.currentChatUserId) {
-      const content = await safeDecrypt(msg, false);
-      appendMessage(msg, content, false);
-    }
-    await loadConversations();
-    showToast('New message from '+msg.sender_username);
+// SOCKET
+function connectSocket(){
+  if(state.socket)state.socket.disconnect();
+  state.socket=io({auth:{token:state.token}});
+  state.socket.on('new_message',async msg=>{
+    if(msg.sender_id===state.currentChatUserId){const c=await safeDecrypt(msg,false);appendMessage(msg,c,false);}
+    await loadConversations();showToast('New message from '+msg.sender_username);
   });
-  state.socket.on('message_sent', async (msg) => {
-    const content = await safeDecrypt(msg, true);
-    appendMessage(msg, content, true);
+  state.socket.on('message_sent',async msg=>{const c=await safeDecrypt(msg,true);appendMessage(msg,c,true);});
+  state.socket.on('message_saved',({id})=>markSaved(id));
+  state.socket.on('message_deleted',({id})=>removeMessageFromDOM(id));
+  state.socket.on('message_edited',async data=>{
+    // Re-decrypt and update DOM
+    const row=document.querySelector('[data-msg-id="'+data.id+'"]');
+    if(!row)return;
+    const isSender=row.dataset.sender==='true';
+    const fakeMsg={ciphertext:data.ciphertext,iv:data.iv,recipient_key:data.recipientKey,sender_key:data.senderKey};
+    try{
+      const s=await decryptMessage(fakeMsg,state.privateKey,isSender);
+      const content=tryParseJson(s);
+      state.decryptedMsgs.set(data.id,content);
+      updateMessageContent(row,content,data.edited_at);
+    }catch{}
   });
-  state.socket.on('user_online',  id => { state.onlineUsers.add(id);    updateOnlineStatus(id,true);  });
-  state.socket.on('user_offline', id => { state.onlineUsers.delete(id); updateOnlineStatus(id,false); });
-  state.socket.on('typing', ({userId,isTyping}) => {
-    if (userId===state.currentChatUserId)
-      document.getElementById('typing-indicator').style.display = isTyping ? 'block' : 'none';
-  });
-  fetch('/api/online', { headers:{Authorization:'Bearer '+state.token} })
-    .then(r=>r.json()).then(d=>{ state.onlineUsers=new Set(d.online); refreshOnlineUI(); });
+  state.socket.on('user_online',id=>{state.onlineUsers.add(id);updateOnlineStatus(id,true);});
+  state.socket.on('user_offline',id=>{state.onlineUsers.delete(id);updateOnlineStatus(id,false);});
+  state.socket.on('typing',({userId,isTyping})=>{if(userId===state.currentChatUserId)document.getElementById('typing-indicator').style.display=isTyping?'block':'none';});
+  fetch('/api/online',{headers:{Authorization:'Bearer '+state.token}}).then(r=>r.json()).then(d=>{state.onlineUsers=new Set(d.online);refreshOnlineUI();});
 }
-
-function updateOnlineStatus(id, online) {
+function updateOnlineStatus(id,online){
   document.querySelectorAll('.online-dot[data-uid="'+id+'"]').forEach(el=>el.classList.toggle('visible',online));
-  if (id===state.currentChatUserId) document.getElementById('chat-sub').textContent = online ? 'online' : 'offline';
+  if(id===state.currentChatUserId)document.getElementById('chat-sub').textContent=online?'online':'offline';
 }
-function refreshOnlineUI() { state.onlineUsers.forEach(id=>updateOnlineStatus(id,true)); }
+function refreshOnlineUI(){state.onlineUsers.forEach(id=>updateOnlineStatus(id,true));}
 
-// ── CONVERSATIONS ─────────────────────────────────────────────────────────────
-async function loadConversations() {
-  const res = await fetch('/api/conversations', { headers:{Authorization:'Bearer '+state.token} });
-  state.conversations = await res.json();
-  renderConvList();
+// CONVERSATIONS
+async function loadConversations(){
+  const res=await fetch('/api/conversations',{headers:{Authorization:'Bearer '+state.token}});
+  state.conversations=await res.json();renderConvList();
 }
-function renderConvList() {
-  const list=document.getElementById('conv-list'), empty=document.getElementById('empty-convs');
+function renderConvList(){
+  const list=document.getElementById('conv-list'),empty=document.getElementById('empty-convs');
   list.innerHTML='';
-  if (!state.conversations.length) { list.appendChild(empty); empty.style.display=''; return; }
-  state.conversations.forEach(c => {
-    const el=document.createElement('div');
-    el.className='conv-item'+(c.other_id===state.currentChatUserId?' active':'');
-    el.setAttribute('data-uid',c.other_id);
+  if(!state.conversations.length){list.appendChild(empty);empty.style.display='';return;}
+  state.conversations.forEach(c=>{
+    const el=document.createElement('div');el.className='conv-item'+(c.other_id===state.currentChatUserId?' active':'');el.setAttribute('data-uid',c.other_id);
     const online=state.onlineUsers.has(c.other_id);
-    el.innerHTML=`<div class="avatar">${c.other_username[0].toUpperCase()}<div class="online-dot${online?' visible':''}" data-uid="${c.other_id}"></div></div>
-      <div class="conv-info"><div style="display:flex;justify-content:space-between"><span class="conv-name">${esc(c.other_username)}</span><span class="conv-time">${c.last_time?formatTime(c.last_time*1000):''}</span></div></div>`;
-    el.onclick=()=>openChat(c.other_id,c.other_username,c.other_public_key);
+    el.innerHTML='<div class="avatar">'+c.other_username[0].toUpperCase()+'<div class="online-dot'+(online?' visible':'')+'" data-uid="'+c.other_id+'"></div></div><div class="conv-info"><div style="display:flex;justify-content:space-between"><span class="conv-name">'+esc(c.other_username)+'</span><span class="conv-time">'+(c.last_time?formatTime(c.last_time*1000):'')+'</span></div></div>';
+    el.onclick=()=>{openChat(c.other_id,c.other_username,c.other_public_key);closeSidebar();};
     list.appendChild(el);
   });
 }
 
-// ── SEARCH ────────────────────────────────────────────────────────────────────
+// SEARCH
 let searchTimer;
-function onSearch(q) {
-  clearTimeout(searchTimer);
-  const results=document.getElementById('search-results');
-  if (!q.trim()) { results.style.display='none'; return; }
-  searchTimer=setTimeout(async ()=>{
+function onSearch(q){
+  clearTimeout(searchTimer);const results=document.getElementById('search-results');
+  if(!q.trim()){results.style.display='none';return;}
+  searchTimer=setTimeout(async()=>{
     const res=await fetch('/api/users/search?q='+encodeURIComponent(q),{headers:{Authorization:'Bearer '+state.token}});
-    const users=await res.json();
-    results.innerHTML='';
-    if (!users.length) { results.innerHTML='<div style="padding:12px 16px;color:var(--text2);font-size:13px">No users found</div>'; }
+    const users=await res.json();results.innerHTML='';
+    if(!users.length){results.innerHTML='<div style="padding:12px 16px;color:var(--text2);font-size:13px">No users found</div>';}
     else users.forEach(u=>{
-      const el=document.createElement('div');
-      el.className='search-result-item';
-      const online=state.onlineUsers.has(u.id);
-      el.innerHTML=`<div class="avatar sm">${u.username[0].toUpperCase()}<div class="online-dot${online?' visible':''}" data-uid="${u.id}"></div></div><span style="font-size:14px;font-weight:500">${esc(u.username)}</span>`;
-      el.onclick=()=>{ results.style.display='none'; document.getElementById('search-input').value=''; openChat(u.id,u.username,u.public_key); };
+      const el=document.createElement('div');el.className='search-result-item';const online=state.onlineUsers.has(u.id);
+      el.innerHTML='<div class="avatar sm">'+u.username[0].toUpperCase()+'<div class="online-dot'+(online?' visible':'')+'" data-uid="'+u.id+'"></div></div><span style="font-size:14px;font-weight:500">'+esc(u.username)+'</span>';
+      el.onclick=()=>{results.style.display='none';document.getElementById('search-input').value='';openChat(u.id,u.username,u.public_key);closeSidebar();};
       results.appendChild(el);
     });
     results.style.display='block';
   },300);
 }
 
-// ── OPEN CHAT ─────────────────────────────────────────────────────────────────
-async function openChat(userId, username, pubKeyJwk) {
-  state.currentChatUserId=userId; state.currentChatUsername=username;
-  state.cachedPublicKeys[userId]=pubKeyJwk;
-  if (!pubKeyJwk) {
-    const res=await fetch('/api/users/'+userId,{headers:{Authorization:'Bearer '+state.token}});
-    const u=await res.json(); pubKeyJwk=u.public_key; state.cachedPublicKeys[userId]=pubKeyJwk;
-  }
+// OPEN CHAT
+async function openChat(userId,username,pubKeyJwk){
+  state.currentChatUserId=userId;state.currentChatUsername=username;state.cachedPublicKeys[userId]=pubKeyJwk;
+  if(!pubKeyJwk){const res=await fetch('/api/users/'+userId,{headers:{Authorization:'Bearer '+state.token}});const u=await res.json();pubKeyJwk=u.public_key;state.cachedPublicKeys[userId]=pubKeyJwk;}
   state.currentChatPubKey=await importPublicKey(pubKeyJwk);
-  document.getElementById('no-chat').style.display='none';
-  document.getElementById('chat-header').style.display='flex';
-  document.getElementById('chat-input-area').style.display='flex';
-  document.getElementById('chat-avatar').textContent=username[0].toUpperCase();
-  document.getElementById('chat-name').textContent=username;
-  document.getElementById('chat-sub').textContent=state.onlineUsers.has(userId)?'online':'offline';
-  document.getElementById('typing-indicator').style.display='none';
+  document.getElementById('no-chat').style.display='none';document.getElementById('chat-header').style.display='flex';document.getElementById('chat-input-area').style.display='flex';
+  document.getElementById('chat-avatar').textContent=username[0].toUpperCase();document.getElementById('chat-name').textContent=username;
+  document.getElementById('chat-sub').textContent=state.onlineUsers.has(userId)?'online':'offline';document.getElementById('typing-indicator').style.display='none';
   document.querySelectorAll('.conv-item').forEach(el=>el.classList.toggle('active',el.getAttribute('data-uid')===userId));
-  await loadMessages(userId);
-  document.getElementById('chat-input').focus();
+  cancelEdit();
+  await loadMessages(userId);document.getElementById('chat-input').focus();
 }
 
-// ── MESSAGES ──────────────────────────────────────────────────────────────────
-async function loadMessages(userId) {
-  const wrap=document.getElementById('messages-wrap');
-  wrap.innerHTML='<div style="text-align:center;color:var(--text2);font-size:13px;padding:20px">Loading...</div>';
-  try {
-    const res=await fetch('/api/messages/'+userId,{headers:{Authorization:'Bearer '+state.token}});
-    const msgs=await res.json();
-    wrap.innerHTML='';
-    const notice=document.createElement('div');
-    notice.className='day-divider';
-    notice.innerHTML='<span>Messages and files are end-to-end encrypted</span>';
-    wrap.appendChild(notice);
+// MESSAGES
+async function loadMessages(userId){
+  const wrap=document.getElementById('messages-wrap');wrap.innerHTML='<div style="text-align:center;color:var(--text2);font-size:13px;padding:20px">Loading...</div>';
+  state.decryptedMsgs.clear();
+  try{
+    const res=await fetch('/api/messages/'+userId,{headers:{Authorization:'Bearer '+state.token}});const msgs=await res.json();wrap.innerHTML='';
+    const notice=document.createElement('div');notice.className='day-divider';notice.innerHTML='<span>Messages expire in 24h &bull; tap action buttons to save</span>';wrap.appendChild(notice);
     let lastDay='';
-    for (const msg of msgs) {
+    for(const msg of msgs){
       const day=new Date(msg.created_at*1000).toLocaleDateString();
-      if (day!==lastDay) {
-        lastDay=day;
-        const d=document.createElement('div'); d.className='day-divider';
-        d.innerHTML='<span>'+formatDay(msg.created_at*1000)+'</span>';
-        wrap.appendChild(d);
-      }
-      const isSender=msg.sender_id===state.userId;
-      const content=await safeDecrypt(msg,isSender);
-      appendMessage(msg,content,isSender,false);
+      if(day!==lastDay){lastDay=day;const d=document.createElement('div');d.className='day-divider';d.innerHTML='<span>'+formatDay(msg.created_at*1000)+'</span>';wrap.appendChild(d);}
+      const isSender=msg.sender_id===state.userId;const c=await safeDecrypt(msg,isSender);appendMessage(msg,c,isSender,false);
     }
     scrollToBottom();
-  } catch(e) { wrap.innerHTML='<div style="text-align:center;color:var(--danger);font-size:13px;padding:20px">Failed to load messages</div>'; }
+  }catch(e){document.getElementById('messages-wrap').innerHTML='<div style="text-align:center;color:var(--danger);font-size:13px;padding:20px">Failed to load messages</div>';}
 }
 
-async function safeDecrypt(msg, isSender) {
-  try {
-    const str=await decryptMessage(msg,state.privateKey,isSender);
-    try { return JSON.parse(str); } catch { return {t:str}; }
-  } catch { return {t:'[Could not decrypt]'}; }
+function tryParseJson(s){try{return JSON.parse(s);}catch{return{t:s};}}
+
+async function safeDecrypt(msg,isSender){
+  try{const s=await decryptMessage(msg,state.privateKey,isSender);return tryParseJson(s);}
+  catch{return{t:'[Could not decrypt]'};}
 }
 
-function appendMessage(msg, content, isSender, doScroll=true) {
+const LOCK_SVG='<svg class="lock-icon" width="10" height="11" viewBox="0 0 10 11" fill="none"><rect x="1.5" y="5" width="7" height="5.5" rx="1" fill="#a3b8cc"/><path d="M2.8 5V3.5a2.2 2.2 0 014.4 0V5" stroke="#a3b8cc" stroke-width="1.2"/></svg>';
+function buildMeta(msg){
+  const time=msg.created_at?formatMsgTime(msg.created_at*1000):'';
+  const tag=msg.saved?'<span class="saved-tag">&#9733; saved</span>':'<span class="expiry-tag">&#8987; '+timeLeft(msg.created_at)+'</span>';
+  const edited=msg.edited_at?'<span class="edited-tag">edited</span>':'';
+  return LOCK_SVG+time+tag+edited;
+}
+function timeLeft(createdAt){
+  if(!createdAt)return'';
+  const rem=(createdAt+86400)-Math.floor(Date.now()/1000);
+  if(rem<=0)return'expired';
+  if(rem<3600)return Math.ceil(rem/60)+'m';
+  return Math.ceil(rem/3600)+'h';
+}
+
+function appendMessage(msg,content,isSender,doScroll=true){
   const wrap=document.getElementById('messages-wrap');
+  state.decryptedMsgs.set(msg.id,content);
+
   const row=document.createElement('div');
   row.className='msg-row '+(isSender?'sent':'received');
   row.setAttribute('data-msg-id',msg.id);
-  const time=msg.created_at?formatMsgTime(msg.created_at*1000):'';
-  row.innerHTML=`<div class="msg-meta"><svg class="lock-icon" width="10" height="11" viewBox="0 0 10 11" fill="none"><rect x="1.5" y="5" width="7" height="5.5" rx="1" fill="#a3b8cc"/><path d="M2.8 5V3.5a2.2 2.2 0 014.4 0V5" stroke="#a3b8cc" stroke-width="1.2"/></svg>${time}</div>`;
-  renderContent(content, row);
-  wrap.appendChild(row);
-  if (doScroll) scrollToBottom();
-}
+  row.dataset.saved=msg.saved?'true':'false';
+  row.dataset.sender=isSender?'true':'false';
 
-function renderContent(content, row) {
-  const meta=row.querySelector('.msg-meta');
-  if (content.f) { row.insertBefore(buildFileEl(content.f), meta); }
-  if (content.t) {
-    const b=document.createElement('div'); b.className='msg-bubble';
-    b.innerHTML=esc(content.t); row.insertBefore(b, meta);
+  // Bubble row = content + action buttons side by side
+  const bubbleRow=document.createElement('div');
+  bubbleRow.className='msg-bubble-row';
+
+  // Content
+  const contentWrap=document.createElement('div');
+  contentWrap.className='msg-content-wrap';
+  if(content.f){contentWrap.appendChild(buildFileEl(content.f,msg.id));}
+  if(content.t){
+    const b=document.createElement('div');b.className='msg-bubble';
+    b.innerHTML=esc(content.t)+(msg.edited_at?' <span class="edited-tag">(edited)</span>':'');
+    b.onclick=()=>saveMessage(msg.id);
+    contentWrap.appendChild(b);
   }
+
+  // Action buttons
+  const actions=document.createElement('div');actions.className='msg-actions';
+
+  if(isSender && content.t){
+    const editBtn=document.createElement('button');
+    editBtn.className='msg-action-btn';editBtn.title='Edit';editBtn.textContent='Edit';
+    editBtn.onclick=e=>{e.stopPropagation();startEdit(msg.id);};
+    actions.appendChild(editBtn);
+  }
+  const delBtn=document.createElement('button');
+  delBtn.className='msg-action-btn danger';delBtn.title='Delete';delBtn.textContent='Del';
+  delBtn.onclick=e=>{e.stopPropagation();deleteMessage(msg.id);};
+  actions.appendChild(delBtn);
+
+  if(!msg.saved){
+    const saveBtn=document.createElement('button');
+    saveBtn.className='msg-action-btn';saveBtn.title='Save forever';saveBtn.textContent='Save';
+    saveBtn.setAttribute('data-save-btn','1');
+    saveBtn.onclick=e=>{e.stopPropagation();saveMessage(msg.id);};
+    actions.appendChild(saveBtn);
+  }
+
+  bubbleRow.appendChild(contentWrap);
+  bubbleRow.appendChild(actions);
+
+  const meta=document.createElement('div');meta.className='msg-meta';meta.innerHTML=buildMeta(msg);
+
+  row.appendChild(bubbleRow);
+  row.appendChild(meta);
+  wrap.appendChild(row);
+  if(doScroll)scrollToBottom();
 }
 
-function buildFileEl(f) {
-  const isImage=f.mime&&f.mime.startsWith('image/');
-  const isVideo=f.mime&&f.mime.startsWith('video/');
-  const isAudio=f.mime&&f.mime.startsWith('audio/');
+function updateMessageContent(row,content,editedAt){
+  const contentWrap=row.querySelector('.msg-content-wrap');
+  if(!contentWrap)return;
+  const bubble=contentWrap.querySelector('.msg-bubble');
+  if(bubble&&content.t){bubble.innerHTML=esc(content.t)+' <span class="edited-tag">(edited)</span>';}
+  const meta=row.querySelector('.msg-meta');
+  if(meta){
+    const createdAt=parseInt(row.dataset.createdAt||0);
+    const saved=row.dataset.saved==='true';
+    const time=meta.querySelector('.msg-meta')?.textContent||'';
+    // Rebuild meta inline
+    const timeStr=meta.innerHTML.match(/\d{1,2}:\d{2}/)?meta.innerHTML.match(/\d{1,2}:\d{2}/)[0]:'';
+    const tag=saved?'<span class="saved-tag">&#9733; saved</span>':'<span class="expiry-tag">&#8987; ?</span>';
+    meta.innerHTML=LOCK_SVG+timeStr+tag+'<span class="edited-tag">edited</span>';
+  }
+  row.querySelectorAll('.msg-bubble').forEach(el=>{el.classList.add('save-flash');setTimeout(()=>el.classList.remove('save-flash'),400);});
+}
 
-  if (isImage) {
-    const wrap=document.createElement('div');
-    wrap.className='msg-img-wrap';
-    wrap.innerHTML='<div class="img-placeholder">Loading image...</div>';
+function buildFileEl(f,msgId){
+  const isImage=f.mime&&f.mime.startsWith('image/'),isVideo=f.mime&&f.mime.startsWith('video/'),isAudio=f.mime&&f.mime.startsWith('audio/');
+  if(isImage){
+    const wrap=document.createElement('div');wrap.className='msg-img-wrap';wrap.innerHTML='<div class="img-placeholder">Loading image...</div>';
     loadDecryptedFile(f.id,f.key,f.iv).then(buf=>{
-      const blob=new Blob([buf],{type:f.mime});
-      const url=URL.createObjectURL(blob);
-      wrap.innerHTML='';
-      const img=document.createElement('img');
-      img.src=url; img.title=f.name; img.alt=f.name;
-      img.onclick=()=>window.open(url,'_blank');
+      const blob=new Blob([buf],{type:f.mime}),url=URL.createObjectURL(blob);
+      wrap.innerHTML='';const img=document.createElement('img');img.src=url;img.title=f.name;img.alt=f.name;
+      img.onclick=e=>{e.stopPropagation();window.open(url,'_blank');};
       wrap.appendChild(img);
-    }).catch(()=>{ wrap.innerHTML='<div class="img-placeholder" style="color:var(--danger)">Failed to load image</div>'; });
+    }).catch(()=>{wrap.innerHTML='<div class="img-placeholder" style="color:var(--danger)">Failed to load image</div>';});
+    wrap.onclick=()=>saveMessage(msgId);
     return wrap;
   }
-
-  const icon=isVideo?'🎥':isAudio?'🎵':'📄';
-  const card=document.createElement('div');
-  card.className='msg-file-card';
-  const inner=document.createElement('div');
-  inner.className='file-card-inner';
-  inner.innerHTML=`<span class="file-icon">${icon}</span>
-    <div class="file-card-info">
-      <div class="file-card-name">${esc(f.name)}</div>
-      <div class="file-card-size">${formatFileSize(f.size)}</div>
-    </div>`;
-  const btn=document.createElement('button');
-  btn.className='file-dl-btn';
-  btn.textContent=isVideo?'Play':'Download';
-  btn.onclick=async()=>{
-    btn.disabled=true; btn.textContent='Loading...';
-    try {
-      const buf=await loadDecryptedFile(f.id,f.key,f.iv);
-      const blob=new Blob([buf],{type:f.mime||'application/octet-stream'});
-      const url=URL.createObjectURL(blob);
-      if (isVideo) { showVideoModal(url,f.name); }
-      else { const a=document.createElement('a'); a.href=url; a.download=f.name; a.click(); setTimeout(()=>URL.revokeObjectURL(url),5000); }
-      btn.textContent=isVideo?'Play':'Download'; btn.disabled=false;
-    } catch(e) { showToast('Failed to decrypt file'); btn.textContent=isVideo?'Play':'Download'; btn.disabled=false; }
+  const icon=isVideo?'video':isAudio?'audio':'file';
+  const iconMap={video:'🎥',audio:'🎵',file:'📄'};
+  const card=document.createElement('div');card.className='msg-file-card';
+  const inner=document.createElement('div');inner.className='file-card-inner';
+  inner.innerHTML='<span class="file-icon">'+iconMap[icon]+'</span><div class="file-card-info"><div class="file-card-name">'+esc(f.name)+'</div><div class="file-card-size">'+formatFileSize(f.size)+'</div></div>';
+  const btn=document.createElement('button');btn.className='file-dl-btn';btn.textContent=isVideo?'Play':'Download';
+  btn.onclick=async e=>{
+    e.stopPropagation();btn.disabled=true;btn.textContent='Loading...';
+    try{
+      const buf=await loadDecryptedFile(f.id,f.key,f.iv),blob=new Blob([buf],{type:f.mime||'application/octet-stream'}),url=URL.createObjectURL(blob);
+      if(isVideo){showVideoModal(url,f.name);}else{const a=document.createElement('a');a.href=url;a.download=f.name;a.click();setTimeout(()=>URL.revokeObjectURL(url),5000);}
+    }catch{showToast('Failed to decrypt file');}
+    btn.textContent=isVideo?'Play':'Download';btn.disabled=false;
   };
-  inner.appendChild(btn);
-  card.appendChild(inner);
+  inner.appendChild(btn);card.appendChild(inner);
+  card.onclick=e=>{if(!e.target.closest('.file-dl-btn'))saveMessage(msgId);};
   return card;
 }
 
-async function loadDecryptedFile(fileId, keyB64, ivB64) {
+async function loadDecryptedFile(fileId,keyB64,ivB64){
   const res=await fetch('/api/files/'+fileId,{headers:{Authorization:'Bearer '+state.token}});
-  if (!res.ok) throw new Error('File not found');
-  return decryptFileBuffer(await res.arrayBuffer(), keyB64, ivB64);
+  if(!res.ok)throw new Error('File not found');
+  return decryptFileBuffer(await res.arrayBuffer(),keyB64,ivB64);
+}
+function showVideoModal(url,name){
+  const m=document.createElement('div');m.className='video-modal';
+  m.innerHTML='<div class="video-modal-bar"><span>'+esc(name)+'</span><button class="video-modal-close" onclick="this.closest(\'.video-modal\').remove()">Close</button></div><video controls autoplay style="max-width:90vw;max-height:80vh;border-radius:8px"><source src="'+url+'"></video>';
+  document.body.appendChild(m);m.onclick=e=>{if(e.target===m)m.remove();};
 }
 
-function showVideoModal(url, name) {
-  const m=document.createElement('div'); m.className='video-modal';
-  m.innerHTML=`<div class="video-modal-bar"><span>${esc(name)}</span><button class="video-modal-close" onclick="this.closest('.video-modal').remove()">Close</button></div>
-    <video controls autoplay style="max-width:90vw;max-height:80vh;border-radius:8px"><source src="${url}"></video>`;
-  document.body.appendChild(m);
-  m.onclick=e=>{ if(e.target===m) m.remove(); };
+// SAVE MESSAGE
+async function saveMessage(id){
+  const row=document.querySelector('[data-msg-id="'+id+'"]');
+  if(!row||row.dataset.saved==='true')return;
+  try{
+    const res=await fetch('/api/messages/'+id+'/save',{method:'POST',headers:{Authorization:'Bearer '+state.token}});
+    if(res.ok){markSaved(id);showToast('Saved forever');}
+  }catch{showToast('Could not save');}
+}
+function markSaved(id){
+  const row=document.querySelector('[data-msg-id="'+id+'"]');
+  if(!row||row.dataset.saved==='true')return;
+  row.dataset.saved='true';
+  const meta=row.querySelector('.msg-meta');
+  if(meta){
+    const timeMatch=meta.innerHTML.match(/\d{1,2}:\d{2}/);
+    const time=timeMatch?timeMatch[0]:'';
+    const editedMatch=meta.innerHTML.includes('edited');
+    meta.innerHTML=LOCK_SVG+time+'<span class="saved-tag">&#9733; saved</span>'+(editedMatch?'<span class="edited-tag">edited</span>':'');
+  }
+  // Remove save button
+  row.querySelectorAll('[data-save-btn]').forEach(b=>b.remove());
+  row.querySelectorAll('.msg-bubble,.msg-img-wrap,.msg-file-card').forEach(el=>{el.classList.add('save-flash');setTimeout(()=>el.classList.remove('save-flash'),400);});
 }
 
-// ── SEND MESSAGE ──────────────────────────────────────────────────────────────
-async function sendMessage() {
+// DELETE MESSAGE
+async function deleteMessage(id){
+  if(!confirm('Delete this message for everyone?'))return;
+  try{
+    const res=await fetch('/api/messages/'+id,{method:'DELETE',headers:{Authorization:'Bearer '+state.token}});
+    if(res.ok){removeMessageFromDOM(id);showToast('Message deleted');}
+    else showToast('Could not delete');
+  }catch{showToast('Could not delete');}
+}
+function removeMessageFromDOM(id){
+  const row=document.querySelector('[data-msg-id="'+id+'"]');
+  if(row){row.remove();state.decryptedMsgs.delete(id);}
+}
+
+// EDIT MESSAGE
+function startEdit(id){
+  const content=state.decryptedMsgs.get(id);
+  if(!content||!content.t)return;
+  state.editingMsgId=id;
   const input=document.getElementById('chat-input');
-  const text=input.value.trim();
-  if (!text||!state.currentChatUserId||!state.currentChatPubKey) return;
-  document.getElementById('send-btn').disabled=true;
-  input.value=''; input.style.height='';
-  if (state.socket) state.socket.emit('typing',{recipientId:state.currentChatUserId,isTyping:false});
-  try {
-    const myPub=await importPublicKey(state.publicKeyJwk);
-    const enc=await encryptMessage({t:text},state.currentChatPubKey,myPub);
-    state.socket.emit('send_message',{recipientId:state.currentChatUserId,...enc});
-  } catch(e) { showToast('Failed to send message'); }
-  document.getElementById('send-btn').disabled=false;
+  input.value=content.t;input.style.height='';input.style.height=Math.min(input.scrollHeight,120)+'px';
+  document.getElementById('edit-mode-bar').style.display='flex';
   input.focus();
+  // Highlight the message being edited
+  document.querySelectorAll('.msg-row').forEach(r=>r.style.opacity=r.getAttribute('data-msg-id')===id?'1':'0.5');
 }
-
-// ── FILE HANDLING ─────────────────────────────────────────────────────────────
-async function handleFileSelect(input) {
-  const file=input.files[0];
-  if (!file) return;
-  input.value='';
-  if (file.size>200*1024*1024) return showToast('File too large (max 200MB)');
-  if (!state.currentChatUserId||!state.currentChatPubKey) return showToast('Open a chat first');
-
-  const progress=document.getElementById('upload-progress');
-  const fill=document.getElementById('upload-progress-fill');
-  const label=document.getElementById('upload-progress-label');
-  const sendBtn=document.getElementById('send-btn');
-  progress.style.display='flex'; fill.style.width='0%'; sendBtn.disabled=true;
-
-  try {
-    label.textContent='Reading file...'; fill.style.width='5%';
-    const buffer=await file.arrayBuffer();
-
-    label.textContent='Encrypting...'; fill.style.width='15%';
-    const {encrypted,key,iv}=await encryptFileBuffer(buffer);
-
-    label.textContent='Uploading 0%...'; fill.style.width='20%';
-    const fileId=await new Promise((resolve,reject)=>{
-      const xhr=new XMLHttpRequest();
-      xhr.open('POST','/api/upload');
-      xhr.setRequestHeader('Authorization','Bearer '+state.token);
-      xhr.setRequestHeader('Content-Type','application/octet-stream');
-      xhr.upload.onprogress=e=>{
-        if(e.lengthComputable){
-          const pct=20+Math.round(e.loaded/e.total*70);
-          fill.style.width=pct+'%';
-          label.textContent='Uploading '+Math.round(e.loaded/e.total*100)+'%...';
-        }
-      };
-      xhr.onload=()=>xhr.status===200?resolve(JSON.parse(xhr.responseText).fileId):reject(new Error('Upload failed ('+xhr.status+')'));
-      xhr.onerror=()=>reject(new Error('Upload error'));
-      xhr.send(encrypted);
-    });
-
-    fill.style.width='95%'; label.textContent='Sending...';
-    const text=document.getElementById('chat-input').value.trim();
-    document.getElementById('chat-input').value='';
-    const payload={f:{id:fileId,name:file.name,mime:file.type,size:file.size,key,iv}};
-    if (text) payload.t=text;
+function cancelEdit(){
+  if(!state.editingMsgId)return;
+  state.editingMsgId=null;
+  document.getElementById('edit-mode-bar').style.display='none';
+  document.getElementById('chat-input').value='';
+  document.querySelectorAll('.msg-row').forEach(r=>r.style.opacity='');
+}
+async function submitEdit(){
+  const id=state.editingMsgId;const input=document.getElementById('chat-input');
+  const newText=input.value.trim();if(!newText)return;
+  const origContent=state.decryptedMsgs.get(id)||{};
+  const payload={...origContent,t:newText};
+  try{
     const myPub=await importPublicKey(state.publicKeyJwk);
     const enc=await encryptMessage(payload,state.currentChatPubKey,myPub);
-    state.socket.emit('send_message',{recipientId:state.currentChatUserId,...enc});
-    fill.style.width='100%';
-  } catch(e) { showToast('Failed: '+e.message); console.error(e); }
-  finally { setTimeout(()=>{ progress.style.display='none'; fill.style.width='0%'; },400); sendBtn.disabled=false; }
+    const res=await fetch('/api/messages/'+id+'/edit',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+state.token},body:JSON.stringify({ciphertext:enc.ciphertext,iv:enc.iv,recipientKey:enc.recipientKey,senderKey:enc.senderKey})});
+    if(res.ok){
+      cancelEdit();
+      // Update local
+      const row=document.querySelector('[data-msg-id="'+id+'"]');
+      if(row){const newContent={...origContent,t:newText};state.decryptedMsgs.set(id,newContent);updateMessageContent(row,newContent,Math.floor(Date.now()/1000));}
+      showToast('Message edited');
+    }else showToast('Could not edit');
+  }catch(e){showToast('Failed: '+e.message);}
 }
 
-// ── INPUT ─────────────────────────────────────────────────────────────────────
-function onInputKeydown(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();} }
-function onInputChange(el) {
-  el.style.height=''; el.style.height=Math.min(el.scrollHeight,120)+'px';
-  if (!state.socket||!state.currentChatUserId) return;
+// STAGED FILE
+function handleFileSelect(input){
+  const file=input.files[0];if(!file)return;input.value='';
+  if(file.size>200*1024*1024)return showToast('File too large (max 200MB)');
+  if(!state.currentChatUserId)return showToast('Open a chat first');
+  // Cancel any previous staged file
+  if(state.stagedFile&&state.stagedFile.previewUrl)URL.revokeObjectURL(state.stagedFile.previewUrl);
+  const isImage=file.type.startsWith('image/');
+  let previewUrl=null;
+  if(isImage)previewUrl=URL.createObjectURL(file);
+  state.stagedFile={file,previewUrl};
+  renderStagedFile(file,previewUrl);
+  document.getElementById('chat-input').focus();
+}
+function renderStagedFile(file,previewUrl){
+  const bar=document.getElementById('staged-file');
+  const isImage=file.type.startsWith('image/');
+  const isVideo=file.type.startsWith('video/');
+  const icon=isVideo?'🎥':file.type.startsWith('audio/')?'🎵':'📄';
+  const thumb=isImage?'<img class="staged-thumb" src="'+previewUrl+'" alt="preview"/>':'<div class="staged-thumb-icon">'+icon+'</div>';
+  bar.innerHTML=thumb+'<div class="staged-info"><div class="staged-name">'+esc(file.name)+'</div><div class="staged-size">'+formatFileSize(file.size)+'</div></div><button class="staged-cancel" onclick="cancelStagedFile()" title="Remove">&#215;</button>';
+  bar.style.display='flex';
+}
+function cancelStagedFile(){
+  if(state.stagedFile&&state.stagedFile.previewUrl)URL.revokeObjectURL(state.stagedFile.previewUrl);
+  state.stagedFile=null;
+  document.getElementById('staged-file').style.display='none';
+  document.getElementById('staged-file').innerHTML='';
+}
+
+// SEND
+async function sendMessage(){
+  // Edit mode: submit edit
+  if(state.editingMsgId){await submitEdit();return;}
+
+  const input=document.getElementById('chat-input'),text=input.value.trim();
+  const hasFile=!!state.stagedFile;
+  if(!text&&!hasFile)return;
+  if(!state.currentChatUserId||!state.currentChatPubKey)return;
+
+  document.getElementById('send-btn').disabled=true;
+
+  try{
+    let filePayload=null;
+    if(hasFile){
+      const file=state.stagedFile.file;
+      const progress=document.getElementById('upload-progress'),fill=document.getElementById('upload-progress-fill'),label=document.getElementById('upload-progress-label');
+      progress.style.display='flex';fill.style.width='0%';
+      label.textContent='Reading file...';fill.style.width='5%';
+      const buffer=await file.arrayBuffer();
+      label.textContent='Encrypting...';fill.style.width='15%';
+      const {encrypted,key,iv}=await encryptFileBuffer(buffer);
+      label.textContent='Uploading 0%...';fill.style.width='20%';
+      const fileId=await new Promise((resolve,reject)=>{
+        const xhr=new XMLHttpRequest();xhr.open('POST','/api/upload');
+        xhr.setRequestHeader('Authorization','Bearer '+state.token);
+        xhr.setRequestHeader('Content-Type','application/octet-stream');
+        xhr.upload.onprogress=e=>{if(e.lengthComputable){fill.style.width=(20+Math.round(e.loaded/e.total*70))+'%';label.textContent='Uploading '+Math.round(e.loaded/e.total*100)+'%...';}};
+        xhr.onload=()=>xhr.status===200?resolve(JSON.parse(xhr.responseText).fileId):reject(new Error('Upload failed'));
+        xhr.onerror=()=>reject(new Error('Upload error'));xhr.send(encrypted);
+      });
+      fill.style.width='95%';label.textContent='Sending...';
+      filePayload={id:fileId,name:file.name,mime:file.type,size:file.size,key,iv};
+      setTimeout(()=>{progress.style.display='none';fill.style.width='0%';},400);
+      cancelStagedFile();
+    }
+
+    input.value='';input.style.height='';
+    if(state.socket)state.socket.emit('typing',{recipientId:state.currentChatUserId,isTyping:false});
+
+    const payload={};
+    if(filePayload)payload.f=filePayload;
+    if(text)payload.t=text;
+
+    const myPub=await importPublicKey(state.publicKeyJwk);
+    const enc=await encryptMessage(payload,state.currentChatPubKey,myPub);
+    state.socket.emit('send_message',{recipientId:state.currentChatUserId,...enc,fileId:filePayload?filePayload.id:null});
+  }catch(e){showToast('Failed: '+e.message);console.error(e);}
+
+  document.getElementById('send-btn').disabled=false;
+  document.getElementById('chat-input').focus();
+}
+
+// INPUT
+function onInputKeydown(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
+function onInputChange(el){
+  el.style.height='';el.style.height=Math.min(el.scrollHeight,120)+'px';
+  if(state.editingMsgId)return; // Don't send typing when editing
+  if(!state.socket||!state.currentChatUserId)return;
   state.socket.emit('typing',{recipientId:state.currentChatUserId,isTyping:true});
-  clearTimeout(state.typingTimeout);
-  state.typingTimeout=setTimeout(()=>{ if(state.socket) state.socket.emit('typing',{recipientId:state.currentChatUserId,isTyping:false}); },2000);
+  clearTimeout(state.typingTimeout);state.typingTimeout=setTimeout(()=>{if(state.socket)state.socket.emit('typing',{recipientId:state.currentChatUserId,isTyping:false});},2000);
 }
 
-// ── UTILS ─────────────────────────────────────────────────────────────────────
-function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>'); }
-function scrollToBottom() { const w=document.getElementById('messages-wrap'); w.scrollTop=w.scrollHeight; }
-function formatTime(ts) {
-  const d=new Date(ts),now=new Date();
-  if(d.toDateString()===now.toDateString()) return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-  const y=new Date(now); y.setDate(y.getDate()-1);
-  return d.toDateString()===y.toDateString()?d.toLocaleDateString([],{weekday:'short'}):d.toLocaleDateString([],{month:'short',day:'numeric'});
-}
-function formatMsgTime(ts) { return new Date(ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
-function formatDay(ts) {
-  const d=new Date(ts),now=new Date();
-  if(d.toDateString()===now.toDateString()) return 'Today';
-  const y=new Date(now); y.setDate(y.getDate()-1);
-  if(d.toDateString()===y.toDateString()) return 'Yesterday';
-  return d.toLocaleDateString([],{weekday:'long',month:'long',day:'numeric'});
-}
-function formatFileSize(n) {
-  if(!n) return '';
-  if(n<1024) return n+' B';
-  if(n<1048576) return (n/1024).toFixed(1)+' KB';
-  return (n/1048576).toFixed(1)+' MB';
-}
+// UTILS
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>');}
+function scrollToBottom(){const w=document.getElementById('messages-wrap');w.scrollTop=w.scrollHeight;}
+function formatTime(ts){const d=new Date(ts),now=new Date();if(d.toDateString()===now.toDateString())return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});const y=new Date(now);y.setDate(y.getDate()-1);return d.toDateString()===y.toDateString()?d.toLocaleDateString([],{weekday:'short'}):d.toLocaleDateString([],{month:'short',day:'numeric'});}
+function formatMsgTime(ts){return new Date(ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
+function formatDay(ts){const d=new Date(ts),now=new Date();if(d.toDateString()===now.toDateString())return'Today';const y=new Date(now);y.setDate(y.getDate()-1);if(d.toDateString()===y.toDateString())return'Yesterday';return d.toLocaleDateString([],{weekday:'long',month:'long',day:'numeric'});}
+function formatFileSize(n){if(!n)return'';if(n<1024)return n+' B';if(n<1048576)return(n/1024).toFixed(1)+' KB';return(n/1048576).toFixed(1)+' MB';}
 let toastTimer;
-function showToast(msg) {
-  const el=document.getElementById('toast');
-  el.textContent=msg; el.classList.add('show');
-  clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),2500);
-}
-document.addEventListener('click',e=>{ if(!document.getElementById('search-input').contains(e.target)) document.getElementById('search-results').style.display='none'; });
+function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2500);}
+document.addEventListener('click',e=>{if(!document.getElementById('search-input').contains(e.target))document.getElementById('search-results').style.display='none';});
 document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 document.getElementById('reg-pass2').addEventListener('keydown',e=>{if(e.key==='Enter')doRegister();});
 </script>
