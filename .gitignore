@@ -1,0 +1,4 @@
+node_modules/
+.jwt_secret
+chat.db.json
+*.bat

@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SecureChat</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #17212b;
+  --sidebar: #212d3b;
+  --surface: #182533;
+  --surface2: #1e2c3a;
+  --sent: #2b5278;
+  --received: #182533;
+  --accent: #5288c1;
+  --accent2: #64b5f6;
+  --text: #e8f4fd;
+  --text2: #a3b8cc;
+  --border: #2a3a4a;
+  --hover: #293d54;
+  --danger: #e57373;
+  --online: #4caf50;
+  --input-bg: #1e2c3a;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Auth Screen ── */
+#auth-screen {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at center, #1e2c3a 0%, #17212b 100%);
+}
+
+.auth-box {
+  background: var(--sidebar);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 40px;
+  width: 360px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+.auth-logo {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.auth-logo svg { width: 64px; height: 64px; }
+
+.auth-logo h1 {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
+  margin-top: 12px;
+}
+
+.auth-logo p {
+  font-size: 13px;
+  color: var(--text2);
+  margin-top: 4px;
+}
+
+.auth-tabs {
+  display: flex;
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 3px;
+  margin-bottom: 24px;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 8px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 8px;
+  color: var(--text2);
+  transition: all 0.2s;
+}
+
+.auth-tab.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 12px;
+  color: var(--text2);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 15px;
+  outline: none;
+  transition: border 0.2s;
+}
+
+.form-group input:focus { border-color: var(--accent); }
+
+.btn-primary {
+  width: 100%;
+  padding: 13px;
+  background: var(--accent);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  margin-top: 4px;
+}
+
+.btn-primary:hover { background: #4a7ab5; }
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.auth-error {
+  background: rgba(229, 115, 115, 0.15);
+  border: 1px solid rgba(229, 115, 115, 0.3);
+  color: var(--danger);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-top: 12px;
+  display: none;
+}
+
+.enc-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text2);
+  margin-top: 18px;
+  justify-content: center;
+}
+
+/* ── App Layout ── */
+#app {
+  display: none;
+  width: 100vw;
+  height: 100vh;
+}
+
+.app-layout {
+  display: flex;
+  height: 100vh;
+}
+
+/* ── Sidebar ── */
+#sidebar {
+  width: 320px;
+  min-width: 260px;
+  background: var(--sidebar);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sidebar-header h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  flex: 1;
+}
+
+.me-badge {
+  font-size: 12px;
+  color: var(--text2);
+  background: var(--surface2);
+  padding: 3px 8px;
+  border-radius: 10px;
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  color: var(--text2);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s, background 0.2s;
+}
+.logout-btn:hover { color: var(--danger); background: rgba(229,115,115,0.1); }
+
+.search-wrap {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 14px 10px 38px;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  transition: border 0.2s;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a3b8cc' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 12px center;
+}
+.search-input:focus { border-color: var(--accent); }
+
+.search-results {
+  display: none;
+  background: var(--sidebar);
+  border-bottom: 1px solid var(--border);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.search-result-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.search-result-item:hover { background: var(--hover); }
+
+.conv-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.conv-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.conv-item:hover { background: var(--hover); }
+.conv-item.active { background: var(--hover); border-left: 3px solid var(--accent); }
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent) 0%, #2e7bcf 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.avatar.sm {
+  width: 36px;
+  height: 36px;
+  font-size: 14px;
+}
+
+.online-dot {
+  position: absolute;
+  bottom: 1px;
+  right: 1px;
+  width: 11px;
+  height: 11px;
+  background: var(--online);
+  border-radius: 50%;
+  border: 2px solid var(--sidebar);
+  display: none;
+}
+.online-dot.visible { display: block; }
+
+.conv-info { flex: 1; min-width: 0; }
+.conv-name { font-size: 15px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.conv-time { font-size: 11px; color: var(--text2); }
+.empty-convs {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--text2);
+  font-size: 14px;
+}
+
+/* ── Chat Area ── */
+#chat-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+.no-chat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text2);
+  gap: 12px;
+}
+.no-chat svg { opacity: 0.3; }
+.no-chat h3 { font-size: 20px; color: var(--text); opacity: 0.5; }
+.no-chat p { font-size: 14px; }
+
+.chat-header {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: var(--sidebar);
+  border-bottom: 1px solid var(--border);
+}
+
+.chat-header-info { flex: 1; }
+.chat-header-name { font-size: 16px; font-weight: 700; }
+.chat-header-sub { font-size: 12px; color: var(--text2); margin-top: 1px; }
+
+.enc-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--online);
+  background: rgba(76,175,80,0.1);
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+.messages-wrap {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.day-divider {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text2);
+  margin: 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.day-divider::before, .day-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.msg-row {
+  display: flex;
+  flex-direction: column;
+  max-width: 70%;
+  gap: 2px;
+}
+.msg-row.sent { align-self: flex-end; align-items: flex-end; }
+.msg-row.received { align-self: flex-start; align-items: flex-start; }
+
+.msg-bubble {
+  padding: 8px 14px;
+  border-radius: 16px;
+  font-size: 14.5px;
+  line-height: 1.5;
+  word-break: break-word;
+  position: relative;
+}
+.msg-row.sent .msg-bubble {
+  background: var(--sent);
+  border-bottom-right-radius: 4px;
+  color: var(--text);
+}
+.msg-row.received .msg-bubble {
+  background: var(--received);
+  border-bottom-left-radius: 4px;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.msg-bubble.decrypting {
+  opacity: 0.5;
+  font-style: italic;
+}
+
+.msg-meta {
+  font-size: 11px;
+  color: var(--text2);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 4px;
+}
+
+.lock-icon { opacity: 0.6; }
+
+.typing-indicator {
+  display: none;
+  padding: 4px 0;
+  font-size: 13px;
+  color: var(--text2);
+  font-style: italic;
+}
+
+.chat-input-area {
+  display: none;
+  padding: 14px 20px;
+  background: var(--sidebar);
+  border-top: 1px solid var(--border);
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.chat-input {
+  flex: 1;
+  padding: 12px 16px;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  color: var(--text);
+  font-size: 15px;
+  outline: none;
+  resize: none;
+  max-height: 120px;
+  line-height: 1.4;
+  transition: border 0.2s;
+  font-family: inherit;
+}
+.chat-input:focus { border-color: var(--accent); }
+
+.send-btn {
+  width: 44px;
+  height: 44px;
+  background: var(--accent);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.1s;
+  flex-shrink: 0;
+}
+.send-btn:hover { background: #4a7ab5; }
+.send-btn:active { transform: scale(0.95); }
+.send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+/* toast */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 13px;
+  transition: transform 0.3s;
+  z-index: 999;
+  pointer-events: none;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* loading spinner */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255,255,255,0.2);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="32" cy="32" r="32" fill="#2b5278"/>
+        <path d="M14 32C14 22.059 22.059 14 32 14s18 8.059 18 18-8.059 18-18 18-18-8.059-18-18z" fill="#5288c1"/>
+        <path d="M24 28h16M24 34h10" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="44" cy="20" r="8" fill="#4caf50"/>
+        <path d="M40 20l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <h1>SecureChat</h1>
+      <p>End-to-end encrypted messaging</p>
+    </div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="switchTab('login')">Sign In</div>
+      <div class="auth-tab" onclick="switchTab('register')">Create Account</div>
+    </div>
+    <div id="login-form">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="login-user" placeholder="your_username" autocomplete="username" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+      <button class="btn-primary" id="login-btn" onclick="doLogin()">Sign In</button>
+    </div>
+    <div id="register-form" style="display:none">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="reg-user" placeholder="choose_username" autocomplete="username" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="reg-pass" placeholder="••••••••" autocomplete="new-password" />
+      </div>
+      <div class="form-group">
+        <label>Confirm Password</label>
+        <input type="password" id="reg-pass2" placeholder="••••••••" autocomplete="new-password" />
+      </div>
+      <button class="btn-primary" id="reg-btn" onclick="doRegister()">Create Account</button>
+    </div>
+    <div class="auth-error" id="auth-error"></div>
+    <div class="enc-note">
+      <svg width="12" height="14" viewBox="0 0 12 14" fill="none"><rect x="2" y="6" width="8" height="7" rx="1.5" fill="#4caf50"/><path d="M3.5 6V4a2.5 2.5 0 015 0v2" stroke="#4caf50" stroke-width="1.5"/></svg>
+      Your messages are end-to-end encrypted
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <div id="sidebar">
+      <div class="sidebar-header">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#2b5278"/><path d="M6 12h12M6 8h12M6 16h8" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <h2>SecureChat</h2>
+        <span class="me-badge" id="me-badge">@user</span>
+        <button class="logout-btn" onclick="doLogout()" title="Sign out">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+      <div class="search-wrap">
+        <input type="text" class="search-input" id="search-input" placeholder="Search users..." oninput="onSearch(this.value)" />
+      </div>
+      <div class="search-results" id="search-results"></div>
+      <div class="conv-list" id="conv-list">
+        <div class="empty-convs" id="empty-convs">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          <p>Search for users to start chatting</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat Area -->
+    <div id="chat-area">
+      <div class="no-chat" id="no-chat">
+        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        <h3>Select a chat</h3>
+        <p>Search for people or open a conversation</p>
+      </div>
+
+      <div class="chat-header" id="chat-header">
+        <div class="avatar sm" id="chat-avatar">?</div>
+        <div class="chat-header-info">
+          <div class="chat-header-name" id="chat-name">-</div>
+          <div class="chat-header-sub" id="chat-sub">offline</div>
+        </div>
+        <div class="enc-badge">
+          <svg width="12" height="14" viewBox="0 0 12 14" fill="none"><rect x="2" y="6" width="8" height="7" rx="1.5" fill="#4caf50"/><path d="M3.5 6V4a2.5 2.5 0 015 0v2" stroke="#4caf50" stroke-width="1.5"/></svg>
+          Encrypted
+        </div>
+      </div>
+
+      <div class="messages-wrap" id="messages-wrap">
+      </div>
+
+      <div class="typing-indicator" id="typing-indicator">typing...</div>
+
+      <div class="chat-input-area" id="chat-input-area">
+        <textarea class="chat-input" id="chat-input" placeholder="Write a message..." rows="1"
+          onkeydown="onInputKeydown(event)" oninput="onInputChange(this)"></textarea>
+        <button class="send-btn" id="send-btn" onclick="sendMessage()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><line x1="22" y1="2" x2="11" y2="13" stroke="white" stroke-width="2"/><polygon points="22 2 15 22 11 13 2 9 22 2" fill="white"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+// ─────────────────────────────────────────
+//  CRYPTO UTILITIES
+// ─────────────────────────────────────────
+
+function b64(buf) {
+  return btoa(String.fromCharCode(...new Uint8Array(buf)));
+}
+function unb64(str) {
+  return Uint8Array.from(atob(str), c => c.charCodeAt(0));
+}
+
+async function generateKeyPair() {
+  return crypto.subtle.generateKey(
+    { name: 'RSA-OAEP', modulusLength: 2048, publicExponent: new Uint8Array([1,0,1]), hash: 'SHA-256' },
+    true, ['encrypt', 'decrypt']
+  );
+}
+
+async function exportPublicKey(key) {
+  const jwk = await crypto.subtle.exportKey('jwk', key);
+  return JSON.stringify(jwk);
+}
+
+async function importPublicKey(jwkStr) {
+  return crypto.subtle.importKey(
+    'jwk', JSON.parse(jwkStr),
+    { name: 'RSA-OAEP', hash: 'SHA-256' },
+    true, ['encrypt']
+  );
+}
+
+async function importPrivateKey(jwkStr) {
+  return crypto.subtle.importKey(
+    'jwk', JSON.parse(jwkStr),
+    { name: 'RSA-OAEP', hash: 'SHA-256' },
+    true, ['decrypt']
+  );
+}
+
+// Protect private key with password using PBKDF2 + AES-GCM
+async function encryptPrivateKey(privateKeyJwk, password) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv   = crypto.getRandomValues(new Uint8Array(12));
+  const enc  = new TextEncoder();
+  const baseKey = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+  const aesKey = await crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations: 200000, hash: 'SHA-256' },
+    baseKey, { name: 'AES-GCM', length: 256 }, false, ['encrypt']
+  );
+  const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, aesKey, enc.encode(privateKeyJwk));
+  return { salt: b64(salt), iv: b64(iv), data: b64(ciphertext) };
+}
+
+async function decryptPrivateKey(encrypted, password) {
+  const enc = new TextEncoder();
+  const salt = unb64(encrypted.salt);
+  const iv   = unb64(encrypted.iv);
+  const data = unb64(encrypted.data);
+  const baseKey = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+  const aesKey = await crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations: 200000, hash: 'SHA-256' },
+    baseKey, { name: 'AES-GCM', length: 256 }, false, ['decrypt']
+  );
+  const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, aesKey, data);
+  return new TextDecoder().decode(plain);
+}
+
+async function encryptMessage(plaintext, recipientPubKey, senderPubKey) {
+  const aesKey = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['encrypt']);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const enc = new TextEncoder().encode(plaintext);
+  const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, aesKey, enc);
+  const rawAes = await crypto.subtle.exportKey('raw', aesKey);
+  const recipientKey = await crypto.subtle.encrypt({ name: 'RSA-OAEP' }, recipientPubKey, rawAes);
+  const senderKey    = await crypto.subtle.encrypt({ name: 'RSA-OAEP' }, senderPubKey, rawAes);
+  return {
+    ciphertext: b64(ciphertext),
+    iv: b64(iv),
+    recipientKey: b64(recipientKey),
+    senderKey: b64(senderKey)
+  };
+}
+
+async function decryptMessage(msg, privateKey, isSender) {
+  const encKey = unb64(isSender ? msg.sender_key : msg.recipient_key);
+  const rawAes = await crypto.subtle.decrypt({ name: 'RSA-OAEP' }, privateKey, encKey);
+  const aesKey = await crypto.subtle.importKey('raw', rawAes, { name: 'AES-GCM' }, false, ['decrypt']);
+  const iv = unb64(msg.iv);
+  const cipher = unb64(msg.ciphertext);
+  const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, aesKey, cipher);
+  return new TextDecoder().decode(plain);
+}
+
+// ─────────────────────────────────────────
+//  APP STATE
+// ─────────────────────────────────────────
+let state = {
+  token: null,
+  userId: null,
+  username: null,
+  privateKey: null,
+  publicKeyJwk: null,
+  currentChatUserId: null,
+  currentChatUsername: null,
+  currentChatPubKey: null,
+  onlineUsers: new Set(),
+  socket: null,
+  typingTimeout: null,
+  conversations: [],
+  cachedPublicKeys: {},
+};
+
+// ─────────────────────────────────────────
+//  AUTH UI
+// ─────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t, i) => t.classList.toggle('active', (i === 0) === (tab === 'login')));
+  document.getElementById('login-form').style.display = tab === 'login' ? '' : 'none';
+  document.getElementById('register-form').style.display = tab === 'register' ? '' : 'none';
+  hideAuthError();
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+function hideAuthError() {
+  document.getElementById('auth-error').style.display = 'none';
+}
+
+async function doLogin() {
+  hideAuthError();
+  const username = document.getElementById('login-user').value.trim();
+  const password = document.getElementById('login-pass').value;
+  if (!username || !password) return showAuthError('Please fill in all fields');
+
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>';
+
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+
+    // Load encrypted private key from localStorage
+    const stored = localStorage.getItem(`securechat_privkey_${username}`);
+    if (!stored) throw new Error('Private key not found on this device. Please register again or use the device you registered on.');
+
+    const encKey = JSON.parse(stored);
+    let privKeyJwk;
+    try {
+      privKeyJwk = await decryptPrivateKey(encKey, password);
+    } catch {
+      throw new Error('Wrong password or corrupted key');
+    }
+    const privateKey = await importPrivateKey(privKeyJwk);
+
+    state.token = data.token;
+    state.userId = data.id;
+    state.username = data.username;
+    state.privateKey = privateKey;
+    state.publicKeyJwk = data.publicKey;
+
+    await launchApp();
+  } catch (e) {
+    showAuthError(e.message);
+    btn.disabled = false;
+    btn.textContent = 'Sign In';
+  }
+}
+
+async function doRegister() {
+  hideAuthError();
+  const username = document.getElementById('reg-user').value.trim();
+  const password = document.getElementById('reg-pass').value;
+  const pass2    = document.getElementById('reg-pass2').value;
+  if (!username || !password) return showAuthError('Please fill in all fields');
+  if (password !== pass2) return showAuthError('Passwords do not match');
+  if (password.length < 6) return showAuthError('Password must be at least 6 characters');
+
+  const btn = document.getElementById('reg-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Generating keys...';
+
+  try {
+    // Generate key pair
+    const keyPair = await generateKeyPair();
+    const pubKeyJwk = await exportPublicKey(keyPair.publicKey);
+    const privKeyJwk = await crypto.subtle.exportKey('jwk', keyPair.privateKey).then(k => JSON.stringify(k));
+
+    // Protect private key with password
+    const encKey = await encryptPrivateKey(privKeyJwk, password);
+    localStorage.setItem(`securechat_privkey_${username}`, JSON.stringify(encKey));
+
+    const res = await fetch('/api/register', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ username, password, publicKey: pubKeyJwk })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      localStorage.removeItem(`securechat_privkey_${username}`);
+      throw new Error(data.error);
+    }
+
+    state.token = data.token;
+    state.userId = data.id;
+    state.username = data.username;
+    state.privateKey = keyPair.privateKey;
+    state.publicKeyJwk = pubKeyJwk;
+
+    await launchApp();
+  } catch (e) {
+    showAuthError(e.message);
+    btn.disabled = false;
+    btn.textContent = 'Create Account';
+  }
+}
+
+function doLogout() {
+  if (state.socket) state.socket.disconnect();
+  state = { token:null, userId:null, username:null, privateKey:null, publicKeyJwk:null,
+            currentChatUserId:null, currentChatUsername:null, currentChatPubKey:null,
+            onlineUsers:new Set(), socket:null, typingTimeout:null, conversations:[],
+            cachedPublicKeys:{} };
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-btn').textContent = 'Sign In';
+  document.getElementById('login-btn').disabled = false;
+  switchTab('login');
+}
+
+// ─────────────────────────────────────────
+//  APP LAUNCH
+// ─────────────────────────────────────────
+async function launchApp() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('me-badge').textContent = '@' + state.username;
+
+  await loadConversations();
+  connectSocket();
+}
+
+// ─────────────────────────────────────────
+//  SOCKET
+// ─────────────────────────────────────────
+function connectSocket() {
+  if (state.socket) state.socket.disconnect();
+  state.socket = io({ auth: { token: state.token } });
+
+  state.socket.on('connect', () => console.log('Socket connected'));
+
+  state.socket.on('new_message', async (msg) => {
+    // If the sender is the current chat, decrypt and display
+    if (msg.sender_id === state.currentChatUserId) {
+      const text = await safeDecrypt(msg, false);
+      appendMessage(msg, text, false);
+    }
+    // Refresh conversations
+    await loadConversations();
+    showToast(`New message from ${msg.sender_username}`);
+  });
+
+  state.socket.on('message_sent', async (msg) => {
+    const text = await safeDecrypt(msg, true);
+    appendMessage(msg, text, true);
+  });
+
+  state.socket.on('user_online', (userId) => {
+    state.onlineUsers.add(userId);
+    updateOnlineStatus(userId, true);
+  });
+
+  state.socket.on('user_offline', (userId) => {
+    state.onlineUsers.delete(userId);
+    updateOnlineStatus(userId, false);
+  });
+
+  state.socket.on('typing', ({ userId, isTyping }) => {
+    if (userId === state.currentChatUserId) {
+      document.getElementById('typing-indicator').style.display = isTyping ? 'block' : 'none';
+    }
+  });
+
+  // Load online users
+  fetch('/api/online', { headers: { Authorization: 'Bearer ' + state.token } })
+    .then(r => r.json()).then(d => { state.onlineUsers = new Set(d.online); refreshOnlineUI(); });
+}
+
+function updateOnlineStatus(userId, online) {
+  // Update conv list dots
+  document.querySelectorAll(`.online-dot[data-uid="${userId}"]`).forEach(el => {
+    el.classList.toggle('visible', online);
+  });
+  // Update chat header if open
+  if (userId === state.currentChatUserId) {
+    document.getElementById('chat-sub').textContent = online ? '🟢 online' : 'offline';
+  }
+}
+
+function refreshOnlineUI() {
+  state.onlineUsers.forEach(uid => updateOnlineStatus(uid, true));
+}
+
+// ─────────────────────────────────────────
+//  CONVERSATIONS
+// ─────────────────────────────────────────
+async function loadConversations() {
+  try {
+    const res = await fetch('/api/conversations', { headers: { Authorization: 'Bearer ' + state.token } });
+    state.conversations = await res.json();
+    renderConvList();
+  } catch(e) { console.error(e); }
+}
+
+function renderConvList() {
+  const list = document.getElementById('conv-list');
+  const empty = document.getElementById('empty-convs');
+  list.innerHTML = '';
+  if (!state.conversations.length) {
+    list.appendChild(empty);
+    empty.style.display = '';
+    return;
+  }
+  state.conversations.forEach(conv => {
+    const item = document.createElement('div');
+    item.className = 'conv-item' + (conv.other_id === state.currentChatUserId ? ' active' : '');
+    item.setAttribute('data-uid', conv.other_id);
+    const letter = conv.other_username[0].toUpperCase();
+    const online = state.onlineUsers.has(conv.other_id);
+    const time = conv.last_time ? formatTime(conv.last_time * 1000) : '';
+    item.innerHTML = `
+      <div class="avatar">${letter}
+        <div class="online-dot${online?' visible':''}" data-uid="${conv.other_id}"></div>
+      </div>
+      <div class="conv-info">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span class="conv-name">${esc(conv.other_username)}</span>
+          <span class="conv-time">${time}</span>
+        </div>
+      </div>
+    `;
+    item.onclick = () => openChat(conv.other_id, conv.other_username, conv.other_public_key);
+    list.appendChild(item);
+  });
+}
+
+// ─────────────────────────────────────────
+//  SEARCH
+// ─────────────────────────────────────────
+let searchTimer;
+function onSearch(q) {
+  clearTimeout(searchTimer);
+  const results = document.getElementById('search-results');
+  if (!q.trim()) { results.style.display = 'none'; return; }
+  searchTimer = setTimeout(async () => {
+    try {
+      const res = await fetch(`/api/users/search?q=${encodeURIComponent(q)}`, {
+        headers: { Authorization: 'Bearer ' + state.token }
+      });
+      const users = await res.json();
+      results.innerHTML = '';
+      if (!users.length) {
+        results.innerHTML = '<div style="padding:12px 16px;color:var(--text2);font-size:13px;">No users found</div>';
+      } else {
+        users.forEach(u => {
+          const item = document.createElement('div');
+          item.className = 'search-result-item';
+          const online = state.onlineUsers.has(u.id);
+          item.innerHTML = `
+            <div class="avatar sm">${u.username[0].toUpperCase()}
+              <div class="online-dot${online?' visible':''}" data-uid="${u.id}"></div>
+            </div>
+            <span style="font-size:14px;font-weight:500;">${esc(u.username)}</span>
+          `;
+          item.onclick = () => {
+            results.style.display = 'none';
+            document.getElementById('search-input').value = '';
+            openChat(u.id, u.username, u.public_key);
+          };
+          results.appendChild(item);
+        });
+      }
+      results.style.display = 'block';
+    } catch(e) { console.error(e); }
+  }, 300);
+}
+
+// ─────────────────────────────────────────
+//  OPEN CHAT
+// ─────────────────────────────────────────
+async function openChat(userId, username, pubKeyJwk) {
+  state.currentChatUserId = userId;
+  state.currentChatUsername = username;
+  state.cachedPublicKeys[userId] = pubKeyJwk;
+
+  // Fetch public key if not provided
+  if (!pubKeyJwk) {
+    const res = await fetch(`/api/users/${userId}`, { headers: { Authorization: 'Bearer ' + state.token } });
+    const u = await res.json();
+    pubKeyJwk = u.public_key;
+    state.cachedPublicKeys[userId] = pubKeyJwk;
+  }
+  state.currentChatPubKey = await importPublicKey(pubKeyJwk);
+
+  // Update UI
+  document.getElementById('no-chat').style.display = 'none';
+  document.getElementById('chat-header').style.display = 'flex';
+  document.getElementById('chat-input-area').style.display = 'flex';
+  document.getElementById('chat-avatar').textContent = username[0].toUpperCase();
+  document.getElementById('chat-name').textContent = username;
+  document.getElementById('chat-sub').textContent = state.onlineUsers.has(userId) ? '🟢 online' : 'offline';
+  document.getElementById('typing-indicator').style.display = 'none';
+
+  // Update active state in conv list
+  document.querySelectorAll('.conv-item').forEach(el => {
+    el.classList.toggle('active', el.getAttribute('data-uid') === userId);
+  });
+
+  // Load messages
+  await loadMessages(userId);
+  document.getElementById('chat-input').focus();
+}
+
+// ─────────────────────────────────────────
+//  MESSAGES
+// ─────────────────────────────────────────
+async function loadMessages(userId) {
+  const wrap = document.getElementById('messages-wrap');
+  wrap.innerHTML = '<div style="text-align:center;color:var(--text2);font-size:13px;padding:20px">Loading messages...</div>';
+
+  try {
+    const res = await fetch(`/api/messages/${userId}`, { headers: { Authorization: 'Bearer ' + state.token } });
+    const msgs = await res.json();
+    wrap.innerHTML = '';
+
+    // Add encryption notice
+    const notice = document.createElement('div');
+    notice.className = 'day-divider';
+    notice.innerHTML = `<span>🔒 Messages are end-to-end encrypted</span>`;
+    wrap.appendChild(notice);
+
+    // Group by day
+    let lastDay = '';
+    for (const msg of msgs) {
+      const day = new Date(msg.created_at * 1000).toLocaleDateString();
+      if (day !== lastDay) {
+        lastDay = day;
+        const div = document.createElement('div');
+        div.className = 'day-divider';
+        div.innerHTML = `<span>${formatDay(msg.created_at * 1000)}</span>`;
+        wrap.appendChild(div);
+      }
+      const isSender = msg.sender_id === state.userId;
+      const text = await safeDecrypt(msg, isSender);
+      appendMessage(msg, text, isSender, false);
+    }
+    scrollToBottom();
+  } catch(e) {
+    wrap.innerHTML = '<div style="text-align:center;color:var(--danger);font-size:13px;padding:20px">Failed to load messages</div>';
+  }
+}
+
+async function safeDecrypt(msg, isSender) {
+  try {
+    return await decryptMessage(msg, state.privateKey, isSender);
+  } catch(e) {
+    return '[Could not decrypt]';
+  }
+}
+
+function appendMessage(msg, text, isSender, doScroll = true) {
+  const wrap = document.getElementById('messages-wrap');
+  const row = document.createElement('div');
+  row.className = 'msg-row ' + (isSender ? 'sent' : 'received');
+  row.setAttribute('data-msg-id', msg.id);
+
+  const time = msg.created_at ? formatMsgTime(msg.created_at * 1000) : '';
+  row.innerHTML = `
+    <div class="msg-bubble">${esc(text)}</div>
+    <div class="msg-meta">
+      <svg class="lock-icon" width="10" height="11" viewBox="0 0 10 11" fill="none">
+        <rect x="1.5" y="5" width="7" height="5.5" rx="1" fill="#a3b8cc"/>
+        <path d="M2.8 5V3.5a2.2 2.2 0 014.4 0V5" stroke="#a3b8cc" stroke-width="1.2"/>
+      </svg>
+      ${time}
+    </div>
+  `;
+  wrap.appendChild(row);
+  if (doScroll) scrollToBottom();
+}
+
+function scrollToBottom() {
+  const wrap = document.getElementById('messages-wrap');
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+// ─────────────────────────────────────────
+//  SEND MESSAGE
+// ─────────────────────────────────────────
+async function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text || !state.currentChatUserId || !state.currentChatPubKey) return;
+
+  const btn = document.getElementById('send-btn');
+  btn.disabled = true;
+  input.value = '';
+  input.style.height = '';
+
+  // Stop typing
+  if (state.socket) state.socket.emit('typing', { recipientId: state.currentChatUserId, isTyping: false });
+
+  try {
+    // Get our own public key for sender copy
+    const myPubKey = await importPublicKey(state.publicKeyJwk);
+    const encrypted = await encryptMessage(text, state.currentChatPubKey, myPubKey);
+
+    state.socket.emit('send_message', {
+      recipientId: state.currentChatUserId,
+      ciphertext: encrypted.ciphertext,
+      iv: encrypted.iv,
+      recipientKey: encrypted.recipientKey,
+      senderKey: encrypted.senderKey
+    });
+  } catch(e) {
+    showToast('Failed to send message');
+    console.error(e);
+  }
+  btn.disabled = false;
+  input.focus();
+}
+
+// ─────────────────────────────────────────
+//  INPUT HANDLING
+// ─────────────────────────────────────────
+function onInputKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function onInputChange(el) {
+  // Auto-resize
+  el.style.height = '';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+
+  // Typing indicator
+  if (!state.socket || !state.currentChatUserId) return;
+  state.socket.emit('typing', { recipientId: state.currentChatUserId, isTyping: true });
+  clearTimeout(state.typingTimeout);
+  state.typingTimeout = setTimeout(() => {
+    if (state.socket) state.socket.emit('typing', { recipientId: state.currentChatUserId, isTyping: false });
+  }, 2000);
+}
+
+// ─────────────────────────────────────────
+//  UTILS
+// ─────────────────────────────────────────
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>');
+}
+
+function formatTime(ts) {
+  const d = new Date(ts), now = new Date();
+  if (d.toDateString() === now.toDateString()) {
+    return d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  }
+  const diff = now - d;
+  if (diff < 7*24*60*60*1000) return d.toLocaleDateString([], {weekday:'short'});
+  return d.toLocaleDateString([], {month:'short', day:'numeric'});
+}
+
+function formatMsgTime(ts) {
+  return new Date(ts).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+}
+
+function formatDay(ts) {
+  const d = new Date(ts), now = new Date();
+  if (d.toDateString() === now.toDateString()) return 'Today';
+  const y = new Date(now); y.setDate(y.getDate()-1);
+  if (d.toDateString() === y.toDateString()) return 'Yesterday';
+  return d.toLocaleDateString([], {weekday:'long', month:'long', day:'numeric'});
+}
+
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// Close search results on outside click
+document.addEventListener('click', (e) => {
+  if (!document.getElementById('search-input').contains(e.target)) {
+    document.getElementById('search-results').style.display = 'none';
+  }
+});
+
+// Enter key on auth forms
+document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+document.getElementById('reg-pass2').addEventListener('keydown', e => { if(e.key==='Enter') doRegister(); });
+</script>
+</body>
+</html>
