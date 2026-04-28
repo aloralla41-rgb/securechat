@@ -8,11 +8,9 @@ const path = require('path');
 const fs = require('fs');
 
 const app = express();
-app.set('trust proxy', 1); // needed behind Render/Railway reverse proxies
+app.set('trust proxy', 1);
 const httpServer = http.createServer(app);
-const io = new Server(httpServer, {
-  transports: ['websocket', 'polling'] // ensure Socket.io works behind proxy
-});
+const io = new Server(httpServer, { transports: ['websocket', 'polling'] });
 
 // Persist JWT secret across restarts
 const secretFile = path.join(__dirname, '.jwt_secret');
@@ -32,7 +30,6 @@ class Store {
     catch { this.data = { users: [], messages: [] }; }
   }
   save() { fs.writeFileSync(this.file, JSON.stringify(this.data)); }
-
   findUserByUsername(username) {
     return this.data.users.find(u => u.username.toLowerCase() === username.toLowerCase());
   }
@@ -44,7 +41,6 @@ class Store {
       .slice(0, 20);
   }
   addUser(user) { this.data.users.push(user); this.save(); }
-
   addMessage(msg) { this.data.messages.push(msg); this.save(); }
   getMessages(a, b) {
     return this.data.messages
@@ -68,6 +64,10 @@ class Store {
 }
 
 const db = new Store(path.join(__dirname, 'chat.db.json'));
+
+// Uploads stored on your machine
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -122,8 +122,24 @@ app.get('/api/messages/:userId', auth, (req, res) => {
 });
 
 const onlineUsers = new Map();
-
 app.get('/api/online', auth, (req, res) => res.json({ online: [...onlineUsers.keys()] }));
+
+// File upload - stored on your machine
+app.post('/api/upload', auth, express.raw({ limit: '200mb', type: () => true }), (req, res) => {
+  if (!req.body || !req.body.length) return res.status(400).json({ error: 'No data' });
+  const fileId = uuidv4();
+  fs.writeFileSync(path.join(uploadsDir, fileId), req.body);
+  res.json({ fileId });
+});
+
+// Serve encrypted file
+app.get('/api/files/:fileId', auth, (req, res) => {
+  const fileId = path.basename(req.params.fileId);
+  const filePath = path.join(uploadsDir, fileId);
+  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Not found' });
+  res.setHeader('Content-Type', 'application/octet-stream');
+  fs.createReadStream(filePath).pipe(res);
+});
 
 io.use((socket, next) => {
   const token = socket.handshake.auth.token;
@@ -136,7 +152,6 @@ io.on('connection', (socket) => {
   onlineUsers.set(socket.user.id, socket.id);
   socket.join(socket.user.id);
   io.emit('user_online', socket.user.id);
-
   socket.on('send_message', (data) => {
     const { recipientId, ciphertext, iv, recipientKey, senderKey } = data;
     if (!recipientId || !ciphertext || !iv || !recipientKey || !senderKey) return;
@@ -148,11 +163,9 @@ io.on('connection', (socket) => {
     io.to(recipientId).emit('new_message', full);
     socket.emit('message_sent', full);
   });
-
   socket.on('typing', ({ recipientId, isTyping }) => {
     io.to(recipientId).emit('typing', { userId: socket.user.id, isTyping });
   });
-
   socket.on('disconnect', () => {
     onlineUsers.delete(socket.user.id);
     io.emit('user_offline', socket.user.id);
@@ -163,16 +176,13 @@ const PORT = process.env.PORT || 3000;
 httpServer.listen(PORT, () => {
   console.log('SecureChat running on http://localhost:' + PORT);
   const nets = require('os').networkInterfaces();
-  for (const name of Object.keys(nets)) {
-    for (const net of nets[name]) {
+  for (const name of Object.keys(nets))
+    for (const net of nets[name])
       if (net.family === 'IPv4' && !net.internal)
         console.log('Network: http://' + net.address + ':' + PORT);
-    }
-  }
 });
 
-
-// Optional public tunnel (run with: node server.js --public)
+// Optional public tunnel: node server.js --public
 if (process.argv.includes('--public')) {
   const localtunnel = require('localtunnel');
   httpServer.once('listening', async () => {
@@ -180,15 +190,10 @@ if (process.argv.includes('--public')) {
       console.log('Starting public tunnel...');
       const tunnel = await localtunnel({ port: PORT });
       console.log('');
-      console.log('====================================');
-      console.log('  PUBLIC URL (share with friend):');
-      console.log('  ' + tunnel.url);
-      console.log('====================================');
+      console.log('PUBLIC URL (share with friend): ' + tunnel.url);
       console.log('');
       tunnel.on('close', () => console.log('Tunnel closed.'));
       tunnel.on('error', e => console.error('Tunnel error:', e.message));
-    } catch (e) {
-      console.error('Could not create tunnel:', e.message);
-    }
+    } catch(e) { console.error('Could not create tunnel:', e.message); }
   });
 }
