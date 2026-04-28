@@ -41,7 +41,8 @@ class Store {
       })
       .map(u => ({ id: u.id, username: u.username, public_key: u.public_key,
                    display_name: u.display_name||'', bio: u.bio||'',
-                   avatar_color: u.avatar_color||'', avatar_emoji: u.avatar_emoji||'' }))
+                   avatar_color: u.avatar_color||'', avatar_emoji: u.avatar_emoji||'',
+                   avatar_file: u.avatar_file||'' }))
       .slice(0, 20);
   }
   addUser(user) { this.data.users.push(user); this.save(); }
@@ -65,6 +66,7 @@ class Store {
         other_id: otherId, other_username: u.username,
         other_display_name: u.display_name||'', other_bio: u.bio||'',
         other_avatar_color: u.avatar_color||'', other_avatar_emoji: u.avatar_emoji||'',
+        other_avatar_file: u.avatar_file||'',
         other_public_key: u.public_key, last_time: lastMsg.created_at
       });
     }
@@ -73,7 +75,6 @@ class Store {
 }
 
 const db = new Store(path.join(__dirname, 'chat.db.json'));
-
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
@@ -114,9 +115,10 @@ app.post('/api/register', async (req, res) => {
   const id = uuidv4();
   db.addUser({ id, username, password_hash: hash, public_key: publicKey,
                encrypted_private_key: encryptedPrivateKey || null,
-               created_at: Date.now(), display_name: '', bio: '', avatar_color: '', avatar_emoji: '' });
+               created_at: Date.now(), display_name: '', bio: '',
+               avatar_color: '', avatar_emoji: '', avatar_file: '' });
   const token = jwt.sign({ id, username }, JWT_SECRET, { expiresIn: '30d' });
-  res.json({ token, id, username, publicKey, display_name: '', bio: '', avatar_color: '', avatar_emoji: '' });
+  res.json({ token, id, username, publicKey, display_name: '', bio: '', avatar_color: '', avatar_emoji: '', avatar_file: '' });
 });
 
 app.post('/api/login', async (req, res) => {
@@ -128,14 +130,45 @@ app.post('/api/login', async (req, res) => {
   res.json({ token, id: user.id, username: user.username, publicKey: user.public_key,
              encryptedPrivateKey: user.encrypted_private_key || null,
              display_name: user.display_name||'', bio: user.bio||'',
-             avatar_color: user.avatar_color||'', avatar_emoji: user.avatar_emoji||'' });
+             avatar_color: user.avatar_color||'', avatar_emoji: user.avatar_emoji||'',
+             avatar_file: user.avatar_file||'' });
+});
+
+// Upload/serve profile picture
+app.post('/api/avatar', auth, express.raw({ limit: '5mb', type: () => true }), (req, res) => {
+  if (!req.body || !req.body.length) return res.status(400).json({ error: 'No data' });
+  const u = db.findUserById(req.user.id);
+  if (!u) return res.status(404).json({ error: 'Not found' });
+  if (u.avatar_file) {
+    const old = path.join(uploadsDir, u.avatar_file);
+    if (fs.existsSync(old)) { try { fs.unlinkSync(old); } catch {} }
+  }
+  const fileId = 'avatar_' + uuidv4();
+  fs.writeFileSync(path.join(uploadsDir, fileId), req.body);
+  u.avatar_file = fileId;
+  db.save();
+  io.emit('profile_updated', { id: u.id, display_name: u.display_name, bio: u.bio,
+                                avatar_color: u.avatar_color, avatar_emoji: u.avatar_emoji,
+                                avatar_file: fileId });
+  res.json({ ok: true, avatar_file: fileId });
+});
+
+app.get('/api/avatar/:userId', (req, res) => {
+  const u = db.findUserById(req.params.userId);
+  if (!u || !u.avatar_file) return res.status(404).json({ error: 'No avatar' });
+  const filePath = path.join(uploadsDir, u.avatar_file);
+  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Not found' });
+  res.setHeader('Content-Type', 'image/jpeg');
+  res.setHeader('Cache-Control', 'public, max-age=31536000');
+  fs.createReadStream(filePath).pipe(res);
 });
 
 app.get('/api/me', auth, (req, res) => {
   const u = db.findUserById(req.user.id);
   if (!u) return res.status(404).json({ error: 'Not found' });
   res.json({ id: u.id, username: u.username, display_name: u.display_name||'',
-             bio: u.bio||'', avatar_color: u.avatar_color||'', avatar_emoji: u.avatar_emoji||'' });
+             bio: u.bio||'', avatar_color: u.avatar_color||'', avatar_emoji: u.avatar_emoji||'',
+             avatar_file: u.avatar_file||'' });
 });
 
 app.patch('/api/profile', auth, (req, res) => {
@@ -147,11 +180,12 @@ app.patch('/api/profile', auth, (req, res) => {
   if (avatar_color !== undefined) u.avatar_color = String(avatar_color).slice(0, 20);
   if (avatar_emoji !== undefined) u.avatar_emoji = String(avatar_emoji).slice(0, 8);
   db.save();
-  // Notify others about profile update
   io.emit('profile_updated', { id: u.id, display_name: u.display_name, bio: u.bio,
-                                avatar_color: u.avatar_color, avatar_emoji: u.avatar_emoji });
+                                avatar_color: u.avatar_color, avatar_emoji: u.avatar_emoji,
+                                avatar_file: u.avatar_file||'' });
   res.json({ ok: true, display_name: u.display_name, bio: u.bio,
-             avatar_color: u.avatar_color, avatar_emoji: u.avatar_emoji });
+             avatar_color: u.avatar_color, avatar_emoji: u.avatar_emoji,
+             avatar_file: u.avatar_file||'' });
 });
 
 app.get('/api/users/search', auth, (req, res) => {
@@ -163,7 +197,8 @@ app.get('/api/users/:id', auth, (req, res) => {
   if (!u) return res.status(404).json({ error: 'Not found' });
   res.json({ id: u.id, username: u.username, public_key: u.public_key,
              display_name: u.display_name||'', bio: u.bio||'',
-             avatar_color: u.avatar_color||'', avatar_emoji: u.avatar_emoji||'' });
+             avatar_color: u.avatar_color||'', avatar_emoji: u.avatar_emoji||'',
+             avatar_file: u.avatar_file||'' });
 });
 app.get('/api/conversations', auth, (req, res) => res.json(db.getConversations(req.user.id)));
 app.get('/api/messages/:userId', auth, (req, res) => {

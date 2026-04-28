@@ -329,6 +329,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
       <!-- Live avatar preview -->
       <div class="profile-avatar-section">
         <div class="avatar lg profile-avatar-preview" id="settings-avatar-preview">?</div>
+        <button onclick="openAvatarPicker()" style="margin-top:8px;background:rgba(82,136,193,.2);border:1px solid rgba(82,136,193,.4);color:var(--accent);padding:6px 18px;border-radius:20px;font-size:13px;cursor:pointer;font-weight:600;">&#128247; Change Photo</button>
         <div class="profile-display-name-preview" id="settings-name-preview"></div>
         <div class="profile-username-preview" id="settings-uname-preview"></div>
         <div class="profile-bio-preview" id="settings-bio-preview"></div>
@@ -398,9 +399,18 @@ const AVATAR_EMOJIS = ['😊','😎','🔥','⚡','🌟','👾','🎯','🦊','�
 
 function avatarBg(color){ return AVATAR_COLORS[color] || AVATAR_COLORS.blue; }
 function avatarContent(emoji, username){ return emoji || (username ? username[0].toUpperCase() : '?'); }
-function applyAvatar(el, emoji, color, username) {
-  el.style.background = avatarBg(color);
-  el.textContent = avatarContent(emoji, username);
+function applyAvatar(el, emoji, color, username, avatarFile) {
+  if (avatarFile) {
+    const uid = el.getAttribute('data-uid') || '';
+    el.style.backgroundImage = 'url(/api/avatar/' + uid + '?t=' + encodeURIComponent(avatarFile) + ')';
+    el.style.backgroundSize = 'cover';
+    el.style.backgroundPosition = 'center';
+    el.textContent = '';
+  } else {
+    el.style.backgroundImage = '';
+    el.style.background = avatarBg(color);
+    el.textContent = avatarContent(emoji, username);
+  }
 }
 
 // CRYPTO
@@ -488,7 +498,7 @@ async function doLogin(){
     const privateKey=await importPrivateKey(privJwk);
     state.token=data.token;state.userId=data.id;state.username=data.username;
     state.privateKey=privateKey;state.publicKeyJwk=data.publicKey;
-    state.profile={display_name:data.display_name||'',bio:data.bio||'',avatar_color:data.avatar_color||'blue',avatar_emoji:data.avatar_emoji||''};
+    state.profile={display_name:data.display_name||'',bio:data.bio||'',avatar_color:data.avatar_color||'blue',avatar_emoji:data.avatar_emoji||'',avatar_file:data.avatar_file||''};
     await launchApp();
   }catch(e){showAuthError(e.message);btn.disabled=false;btn.textContent='Sign In';}
 }
@@ -508,14 +518,14 @@ async function doRegister(){
     const data=await res.json();if(!res.ok){localStorage.removeItem('securechat_privkey_'+username);throw new Error(data.error);}
     state.token=data.token;state.userId=data.id;state.username=data.username;
     state.privateKey=kp.privateKey;state.publicKeyJwk=pubJwk;
-    state.profile={display_name:'',bio:'',avatar_color:'blue',avatar_emoji:''};
+    state.profile={display_name:'',bio:'',avatar_color:'blue',avatar_emoji:'',avatar_file:''};
     await launchApp();
   }catch(e){showAuthError(e.message);btn.disabled=false;btn.textContent='Create Account';}
 }
 function doLogout(){
   if(state.socket)state.socket.disconnect();
   cancelStagedFile();cancelEdit();closeSettings();
-  state={token:null,userId:null,username:null,privateKey:null,publicKeyJwk:null,currentChatUserId:null,currentChatUsername:null,currentChatPubKey:null,onlineUsers:new Set(),socket:null,typingTimeout:null,conversations:[],cachedPublicKeys:{},stagedFile:null,editingMsgId:null,decryptedMsgs:new Map(),profile:{display_name:'',bio:'',avatar_color:'blue',avatar_emoji:''},settingsColor:'blue',settingsEmoji:'',profileCache:{}};
+  state={token:null,userId:null,username:null,privateKey:null,publicKeyJwk:null,currentChatUserId:null,currentChatUsername:null,currentChatPubKey:null,onlineUsers:new Set(),socket:null,typingTimeout:null,conversations:[],cachedPublicKeys:{},stagedFile:null,editingMsgId:null,decryptedMsgs:new Map(),profile:{display_name:'',bio:'',avatar_color:'blue',avatar_emoji:'',avatar_file:''},settingsColor:'blue',settingsEmoji:'',profileCache:{}};
   document.getElementById('app').style.display='none';document.getElementById('auth-screen').style.display='flex';
   document.getElementById('login-user').value='';document.getElementById('login-pass').value='';
   document.getElementById('login-btn').textContent='Sign In';document.getElementById('login-btn').disabled=false;
@@ -540,6 +550,7 @@ function openSettings(){
   document.getElementById('settings-bio').value=p.bio||'';
   document.getElementById('settings-username-ro').textContent='@'+state.username;
   document.getElementById('bio-char-count').textContent=(p.bio||'').length+' / 150';
+  const prev=document.getElementById('settings-avatar-preview');prev.setAttribute('data-uid',state.userId);
   buildColorSwatches();buildEmojiGrid();updateSettingsPreview();
   document.getElementById('settings-overlay').style.display='flex';
 }
@@ -573,7 +584,7 @@ function updateSettingsPreview(){
   const name=document.getElementById('settings-display-name').value.trim()||state.username;
   const bio=document.getElementById('settings-bio').value.trim();
   const av=document.getElementById('settings-avatar-preview');
-  applyAvatar(av,state.settingsEmoji,state.settingsColor,state.username);
+  applyAvatar(av,state.settingsEmoji,state.settingsColor,state.username,state.profile.avatar_file||'');
   document.getElementById('settings-name-preview').textContent=name;
   document.getElementById('settings-uname-preview').textContent='@'+state.username;
   document.getElementById('settings-bio-preview').textContent=bio;
@@ -593,7 +604,7 @@ async function saveProfile(){
     const res=await fetch('/api/profile',{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer '+state.token},body:JSON.stringify(body)});
     if(!res.ok)throw new Error('Failed');
     const data=await res.json();
-    state.profile={display_name:data.display_name,bio:data.bio,avatar_color:data.avatar_color,avatar_emoji:data.avatar_emoji};
+    state.profile={display_name:data.display_name,bio:data.bio,avatar_color:data.avatar_color,avatar_emoji:data.avatar_emoji,avatar_file:state.profile.avatar_file||''};
     // Update UI
     applyAvatar(document.getElementById('my-avatar'),state.profile.avatar_emoji,state.profile.avatar_color||'blue',state.username);
     document.getElementById('me-badge').textContent=state.profile.display_name||('@'+state.username);
@@ -632,12 +643,12 @@ function connectSocket(){
 function refreshProfileInUI(p){
   // Update conversation list avatars
   document.querySelectorAll('.conv-item[data-uid="'+p.id+'"]').forEach(el=>{
-    const av=el.querySelector('.avatar');if(av)applyAvatar(av,p.avatar_emoji,p.avatar_color||'blue',el.querySelector('.conv-name')?.textContent||'?');
+    const av=el.querySelector('.avatar');if(av){av.setAttribute('data-uid',p.id);applyAvatar(av,p.avatar_emoji,p.avatar_color||'blue',el.querySelector('.conv-name')?.textContent||'?',p.avatar_file||'');}
     const nameEl=el.querySelector('.conv-name');if(nameEl&&p.display_name)nameEl.textContent=p.display_name;
   });
   // Update chat header if active
   if(p.id===state.currentChatUserId){
-    const av=document.getElementById('chat-avatar');if(av)applyAvatar(av,p.avatar_emoji,p.avatar_color||'blue',state.currentChatUsername);
+    const av=document.getElementById('chat-avatar');if(av){av.setAttribute('data-uid',p.id);applyAvatar(av,p.avatar_emoji,p.avatar_color||'blue',state.currentChatUsername,p.avatar_file||'');}
     if(p.display_name)document.getElementById('chat-name').textContent=p.display_name||state.currentChatUsername;
   }
 }
@@ -662,13 +673,14 @@ function renderConvList(){
     const el=document.createElement('div');el.className='conv-item'+(c.other_id===state.currentChatUserId?' active':'');el.setAttribute('data-uid',c.other_id);
     const online=state.onlineUsers.has(c.other_id);
     const av=document.createElement('div');av.className='avatar';
-    applyAvatar(av,c.other_avatar_emoji,c.other_avatar_color||'blue',c.other_username);
+    av.setAttribute('data-uid', c.other_id);
+    applyAvatar(av,c.other_avatar_emoji,c.other_avatar_color||'blue',c.other_username,c.other_avatar_file||'');
     const dot=document.createElement('div');dot.className='online-dot'+(online?' visible':'');dot.setAttribute('data-uid',c.other_id);
     av.appendChild(dot);
     const info=document.createElement('div');info.className='conv-info';
     info.innerHTML='<div style="display:flex;justify-content:space-between"><span class="conv-name">'+esc(displayName)+'</span><span class="conv-time">'+(c.last_time?formatTime(c.last_time*1000):'')+'</span></div>';
     el.appendChild(av);el.appendChild(info);
-    el.onclick=()=>{openChat(c.other_id,c.other_username,c.other_public_key,c.other_display_name,c.other_avatar_color,c.other_avatar_emoji);closeSidebar();};
+    el.onclick=()=>{openChat(c.other_id,c.other_username,c.other_public_key,c.other_display_name,c.other_avatar_color,c.other_avatar_emoji,c.other_avatar_file||'');closeSidebar();};
     list.appendChild(el);
   });
 }
@@ -686,13 +698,14 @@ function onSearch(q){
       const displayName=u.display_name||u.username;
       const el=document.createElement('div');el.className='search-result-item';const online=state.onlineUsers.has(u.id);
       const av=document.createElement('div');av.className='avatar sm';
-      applyAvatar(av,u.avatar_emoji,u.avatar_color||'blue',u.username);
+      av.setAttribute('data-uid', u.id);
+      applyAvatar(av,u.avatar_emoji,u.avatar_color||'blue',u.username,u.avatar_file||'');
       const dot=document.createElement('div');dot.className='online-dot'+(online?' visible':'');dot.setAttribute('data-uid',u.id);
       av.appendChild(dot);
       const info=document.createElement('div');info.className='search-result-info';
       info.innerHTML='<div class="search-result-name">'+esc(displayName)+'</div>'+(u.bio?'<div class="search-result-bio">'+esc(u.bio)+'</div>':'');
       el.appendChild(av);el.appendChild(info);
-      el.onclick=()=>{results.style.display='none';document.getElementById('search-input').value='';openChat(u.id,u.username,u.public_key,u.display_name,u.avatar_color,u.avatar_emoji);closeSidebar();};
+      el.onclick=()=>{results.style.display='none';document.getElementById('search-input').value='';openChat(u.id,u.username,u.public_key,u.display_name,u.avatar_color,u.avatar_emoji,u.avatar_file||'');closeSidebar();};
       results.appendChild(el);
     });
     results.style.display='block';
@@ -700,13 +713,14 @@ function onSearch(q){
 }
 
 // OPEN CHAT
-async function openChat(userId,username,pubKeyJwk,displayName,avatarColor,avatarEmoji){
+async function openChat(userId,username,pubKeyJwk,displayName,avatarColor,avatarEmoji,avatarFile){
   state.currentChatUserId=userId;state.currentChatUsername=username;state.cachedPublicKeys[userId]=pubKeyJwk;
-  if(!pubKeyJwk){const res=await fetch('/api/users/'+userId,{headers:{Authorization:'Bearer '+state.token}});const u=await res.json();pubKeyJwk=u.public_key;displayName=u.display_name;avatarColor=u.avatar_color;avatarEmoji=u.avatar_emoji;state.cachedPublicKeys[userId]=pubKeyJwk;}
+  if(!pubKeyJwk){const res=await fetch('/api/users/'+userId,{headers:{Authorization:'Bearer '+state.token}});const u=await res.json();pubKeyJwk=u.public_key;displayName=u.display_name;avatarColor=u.avatar_color;avatarEmoji=u.avatar_emoji;avatarFile=u.avatar_file||'';state.cachedPublicKeys[userId]=pubKeyJwk;}
   state.currentChatPubKey=await importPublicKey(pubKeyJwk);
   document.getElementById('no-chat').style.display='none';document.getElementById('chat-header').style.display='flex';document.getElementById('chat-input-area').style.display='flex';
   const chatAv=document.getElementById('chat-avatar');
-  applyAvatar(chatAv,avatarEmoji||'',avatarColor||'blue',username);
+  chatAv.setAttribute('data-uid', userId);
+  applyAvatar(chatAv,avatarEmoji||'',avatarColor||'blue',username,avatarFile||'');
   document.getElementById('chat-name').textContent=displayName||username;
   document.getElementById('chat-sub').textContent=state.onlineUsers.has(userId)?'online':'offline';
   document.getElementById('typing-indicator').style.display='none';
@@ -944,9 +958,4 @@ function formatDay(ts){const d=new Date(ts),now=new Date();if(d.toDateString()==
 function formatFileSize(n){if(!n)return'';if(n<1024)return n+' B';if(n<1048576)return(n/1024).toFixed(1)+' KB';return(n/1048576).toFixed(1)+' MB';}
 let toastTimer;
 function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2500);}
-document.addEventListener('click',e=>{if(!document.getElementById('search-input').contains(e.target)&&!document.getElementById('search-results').contains(e.target))document.getElementById('search-results').style.display='none';});
-document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
-document.getElementById('reg-pass2').addEventListener('keydown',e=>{if(e.key==='Enter')doRegister();});
-</script>
-</body>
-</html>
+document.addEventListener('click',e=>{if(!document.getElementById('search-input').contains(e.target)&&!document.getElementById('search-results').contains(e.target))document.getEle
