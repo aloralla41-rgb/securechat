@@ -105,15 +105,16 @@ function auth(req, res, next) {
 }
 
 app.post('/api/register', async (req, res) => {
-  const { username, password, publicKey } = req.body;
+  const { username, password, publicKey, encryptedPrivateKey } = req.body;
   if (!username || !password || !publicKey) return res.status(400).json({ error: 'Missing fields' });
   if (username.length < 3 || username.length > 32) return res.status(400).json({ error: 'Username must be 3-32 characters' });
   if (!/^[a-zA-Z0-9_]+$/.test(username)) return res.status(400).json({ error: 'Username: letters, numbers, _ only' });
   if (db.findUserByUsername(username)) return res.status(409).json({ error: 'Username already taken' });
   const hash = await bcrypt.hash(password, 12);
   const id = uuidv4();
-  db.addUser({ id, username, password_hash: hash, public_key: publicKey, created_at: Date.now(),
-               display_name: '', bio: '', avatar_color: '', avatar_emoji: '' });
+  db.addUser({ id, username, password_hash: hash, public_key: publicKey,
+               encrypted_private_key: encryptedPrivateKey || null,
+               created_at: Date.now(), display_name: '', bio: '', avatar_color: '', avatar_emoji: '' });
   const token = jwt.sign({ id, username }, JWT_SECRET, { expiresIn: '30d' });
   res.json({ token, id, username, publicKey, display_name: '', bio: '', avatar_color: '', avatar_emoji: '' });
 });
@@ -125,6 +126,7 @@ app.post('/api/login', async (req, res) => {
     return res.status(401).json({ error: 'Invalid username or password' });
   const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '30d' });
   res.json({ token, id: user.id, username: user.username, publicKey: user.public_key,
+             encryptedPrivateKey: user.encrypted_private_key || null,
              display_name: user.display_name||'', bio: user.bio||'',
              avatar_color: user.avatar_color||'', avatar_emoji: user.avatar_emoji||'' });
 });

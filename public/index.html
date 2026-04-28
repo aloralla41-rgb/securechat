@@ -480,9 +480,11 @@ async function doLogin(){
   try{
     const res=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})});
     const data=await res.json();if(!res.ok)throw new Error(data.error);
-    const stored=localStorage.getItem('securechat_privkey_'+username);
-    if(!stored)throw new Error('Private key not found on this device. Register again or use your original device.');
-    const privJwk=await decryptPrivateKey(JSON.parse(stored),password);
+    // Try local key first, fall back to server-stored encrypted key
+    let storedEnc=localStorage.getItem('securechat_privkey_'+username);
+    if(!storedEnc&&data.encryptedPrivateKey){storedEnc=JSON.stringify(data.encryptedPrivateKey);localStorage.setItem('securechat_privkey_'+username,storedEnc);}
+    if(!storedEnc)throw new Error('Private key not found. This account was created on an older version — please create a new account.');
+    const privJwk=await decryptPrivateKey(JSON.parse(storedEnc),password);
     const privateKey=await importPrivateKey(privJwk);
     state.token=data.token;state.userId=data.id;state.username=data.username;
     state.privateKey=privateKey;state.publicKeyJwk=data.publicKey;
@@ -502,7 +504,7 @@ async function doRegister(){
     const privJwk=JSON.stringify(await crypto.subtle.exportKey('jwk',kp.privateKey));
     const encKey=await encryptPrivateKey(privJwk,password);
     localStorage.setItem('securechat_privkey_'+username,JSON.stringify(encKey));
-    const res=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password,publicKey:pubJwk})});
+    const res=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password,publicKey:pubJwk,encryptedPrivateKey:encKey})});
     const data=await res.json();if(!res.ok){localStorage.removeItem('securechat_privkey_'+username);throw new Error(data.error);}
     state.token=data.token;state.userId=data.id;state.username=data.username;
     state.privateKey=kp.privateKey;state.publicKeyJwk=pubJwk;
