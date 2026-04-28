@@ -612,6 +612,26 @@ async function saveProfile(){
   }catch(e){showToast('Could not save profile');}
   btn.disabled=false;btn.textContent='Save Changes';
 }
+function openAvatarPicker(){
+  const input=document.createElement('input');
+  input.type='file';input.accept='image/*';
+  input.onchange=async()=>{
+    const file=input.files[0];if(!file)return;
+    showToast('Uploading photo...');
+    try{
+      const res=await fetch('/api/avatar',{method:'POST',headers:{Authorization:'Bearer '+state.token,'Content-Type':file.type},body:file});
+      if(!res.ok)throw new Error();
+      const data=await res.json();
+      state.profile.avatar_file=data.avatar_file;
+      const av=document.getElementById('settings-avatar-preview');
+      av.setAttribute('data-uid',state.userId);
+      updateSettingsPreview();
+      applyAvatar(document.getElementById('my-avatar'),state.profile.avatar_emoji,state.profile.avatar_color||'blue',state.username,state.profile.avatar_file);
+      showToast('Photo updated!');
+    }catch(e){showToast('Could not upload photo');}
+  };
+  input.click();
+}
 
 // SOCKET
 function connectSocket(){
