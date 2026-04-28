@@ -958,4 +958,7 @@ function formatDay(ts){const d=new Date(ts),now=new Date();if(d.toDateString()==
 function formatFileSize(n){if(!n)return'';if(n<1024)return n+' B';if(n<1048576)return(n/1024).toFixed(1)+' KB';return(n/1048576).toFixed(1)+' MB';}
 let toastTimer;
 function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2500);}
-document.addEventListener('click',e=>{if(!document.getElementById('search-input').contains(e.target)&&!document.getElementById('search-results').contains(e.target))document.getEle
+document.addEventListener('click',e=>{if(!document.getElementById('search-input').contains(e.target)&&!document.getElementById('search-results').contains(e.target))document.getElementById('search-results').style.display='none';});
+</script>
+</body>
+</html>
